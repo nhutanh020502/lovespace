@@ -26,3 +26,9 @@ dist-ssr
 # Environment variables
 .env
 .env.production
+
+# Android & APK builds
+*.apk
+public/*.apk
+android/app/build/
+

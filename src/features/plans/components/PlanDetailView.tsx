@@ -353,6 +353,7 @@ export const PlanDetailView: React.FC<PlanDetailViewProps> = ({
           onOpenEditItem={handleOpenEditItem}
           onDeleteItem={handleDeleteItem}
           onToggleCompleteItem={handleToggleCompleteItem}
+          onUpdatePlanItems={(newItems) => onUpdatePlan({ ...plan, items: newItems, updatedAt: new Date().toISOString() })}
         />
       ) : (
         <PlanTimelineView
