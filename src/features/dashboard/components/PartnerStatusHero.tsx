@@ -192,12 +192,12 @@ export const PartnerStatusHero: React.FC<PartnerStatusHeroProps> = ({
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
-          className="relative rounded-3xl overflow-hidden my-3 border border-white/80 shadow-md max-h-64 sm:max-h-72 bg-slate-900/5 group"
+          className="relative rounded-3xl overflow-hidden my-3 border border-white/80 shadow-md bg-slate-900/5 group"
         >
           <img
             src={currentDisplayMood.photoUrl}
             alt="Mood"
-            className="w-full h-52 sm:h-60 object-cover object-center group-hover:scale-103 transition-transform duration-500"
+            className="w-full h-auto object-contain block group-hover:scale-101 transition-transform duration-500"
             loading="lazy"
           />
 
