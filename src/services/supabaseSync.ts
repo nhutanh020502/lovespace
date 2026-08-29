@@ -381,6 +381,8 @@ export async function fetchMemories(): Promise<MemoryPhoto[] | null> {
       note: row.note,
       location: row.location,
       tags: row.tags || [],
+      type: row.type || 'couple_photo',
+      linkUrl: row.link_url,
       uploadedBy: row.uploaded_by,
       createdAt: row.created_at,
     }));
@@ -398,6 +400,8 @@ export async function insertMemory(memory: MemoryPhoto) {
       note: memory.note,
       location: memory.location,
       tags: memory.tags || [],
+      type: memory.type || 'couple_photo',
+      link_url: memory.linkUrl || null,
       uploaded_by: memory.uploadedBy,
       created_at: memory.createdAt,
     };
@@ -421,6 +425,8 @@ export async function updateMemory(memoryId: string, updated: Partial<MemoryPhot
     if (updated.location !== undefined) payload.location = updated.location;
     if (updated.photoUrl !== undefined) payload.photo_url = updated.photoUrl;
     if (updated.tags !== undefined) payload.tags = updated.tags;
+    if (updated.type !== undefined) payload.type = updated.type;
+    if (updated.linkUrl !== undefined) payload.link_url = updated.linkUrl || null;
 
     const { error } = await supabase.from('memory_gallery').update(payload).eq('id', memoryId);
     if (error) console.error('updateMemory error:', error);

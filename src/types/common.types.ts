@@ -72,8 +72,12 @@ export interface MemoryPhoto {
   photoUrl: string;
   date: string; // YYYY-MM-DD
   note: string; // Câu chuyện / Ghi chú kỷ niệm
-  location: string; // 'Đà Lạt', 'Hà Nội', 'Tiệm Cà Phê...'
+  location: string; // 'Đà Lạt', 'Hà Nội', 'Quận 1, TP.HCM...'
   tags: string[];
+  type?: 'couple_photo' | 'places_dating'; // 'couple_photo' (Ảnh chung) vs 'places_dating' (Điểm hẹn ăn chơi)
+  linkUrl?: string; // Link bài viết / Google Maps / Website
+  latitude?: number;
+  longitude?: number;
   uploadedBy: string;
   createdAt: string;
 }
