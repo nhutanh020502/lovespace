@@ -62,6 +62,7 @@ export interface HealthStatus {
     lastPeriodDate: string;
     cycleLengthDays: number;
     notes?: string;
+    careTips?: string[];
   };
   lastUpdated: string;
 }

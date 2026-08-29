@@ -17,6 +17,7 @@ import {
   Trash2,
   Check,
   X,
+  RotateCcw,
 } from 'lucide-react';
 import { formatDateVi } from '../../../utils/dateUtils';
 
@@ -94,6 +95,23 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
   // State cho chỉnh sửa món khoái khẩu
   const [editingComfortIndex, setEditingComfortIndex] = useState<number | null>(null);
   const [editComfortValue, setEditComfortValue] = useState('');
+
+  // State cho Lời Dặn / Chăm Sóc Sức Khỏe Cho Chồng
+  const [isAddingHusbandTip, setIsAddingHusbandTip] = useState(false);
+  const [newHusbandTipText, setNewHusbandTipText] = useState('');
+  const [editingHusbandTipIndex, setEditingHusbandTipIndex] = useState<number | null>(null);
+  const [editHusbandTipValue, setEditHusbandTipValue] = useState('');
+
+  const defaultHusbandTips = [
+    'Uống đủ nước: Nhắc anh uống đủ 2 lít nước mỗi ngày khi làm việc.',
+    'Giấc ngủ ngon: Nhắc anh không thức quá khuya sau 23h30.',
+    'Tiếp thêm năng lượng: Chuẩn bị một cái ôm ấm áp để tiếp sức cho anh nhé! ❤️',
+  ];
+
+  const husbandCareTips: string[] =
+    health.periodTracking?.careTips && health.periodTracking.careTips.length > 0
+      ? health.periodTracking.careTips
+      : defaultHusbandTips;
 
   // =========================================================================
   // CRUD HANDLERS - 100% CẬP NHẬT TỰ ĐỘNG
@@ -266,6 +284,57 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
       lastUpdated: new Date().toISOString(),
     });
     setIsPeriodModalOpen(false);
+  };
+
+  // 7. Lời dặn chăm sóc cho chồng
+  const handleAddHusbandTip = () => {
+    if (!newHusbandTipText.trim()) return;
+    const updated = [...husbandCareTips, newHusbandTipText.trim()];
+    onUpdateHealth(targetUser.id, {
+      periodTracking: {
+        ...(health.periodTracking || { lastPeriodDate: '', cycleLengthDays: 28 }),
+        careTips: updated,
+      },
+      lastUpdated: new Date().toISOString(),
+    });
+    setNewHusbandTipText('');
+    setIsAddingHusbandTip(false);
+  };
+
+  const handleDeleteHusbandTip = (idx: number) => {
+    const updated = husbandCareTips.filter((_, i) => i !== idx);
+    onUpdateHealth(targetUser.id, {
+      periodTracking: {
+        ...(health.periodTracking || { lastPeriodDate: '', cycleLengthDays: 28 }),
+        careTips: updated,
+      },
+      lastUpdated: new Date().toISOString(),
+    });
+  };
+
+  const handleSaveEditHusbandTip = (idx: number) => {
+    if (!editHusbandTipValue.trim()) return;
+    const updated = [...husbandCareTips];
+    updated[idx] = editHusbandTipValue.trim();
+    onUpdateHealth(targetUser.id, {
+      periodTracking: {
+        ...(health.periodTracking || { lastPeriodDate: '', cycleLengthDays: 28 }),
+        careTips: updated,
+      },
+      lastUpdated: new Date().toISOString(),
+    });
+    setEditingHusbandTipIndex(null);
+    setEditHusbandTipValue('');
+  };
+
+  const handleResetDefaultHusbandTips = () => {
+    onUpdateHealth(targetUser.id, {
+      periodTracking: {
+        ...(health.periodTracking || { lastPeriodDate: '', cycleLengthDays: 28 }),
+        careTips: defaultHusbandTips,
+      },
+      lastUpdated: new Date().toISOString(),
+    });
   };
 
   return (
@@ -837,16 +906,141 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
         </Card>
       ) : (
         <Card variant="glass" className="p-4 sm:p-5 border-l-4 border-l-blue-400">
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-5 h-5 text-blue-500" />
-            <h4 className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-wider">
-              Chăm Sóc Sức Khỏe Cho Chồng 🐻
-            </h4>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-blue-500 shrink-0" />
+              <div>
+                <h4 className="text-xs sm:text-sm font-black text-slate-800 uppercase tracking-wider">
+                  Chăm Sóc Sức Khỏe Cho Chồng 🐻
+                </h4>
+                <p className="text-[11px] text-slate-500">Lời dặn dò & bí kíp để vợ chăm sóc anh chu đáo</p>
+              </div>
+            </div>
+
+            {isOwner && (
+              <div className="flex items-center gap-1.5 self-end sm:self-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleResetDefaultHusbandTips}
+                  className="text-xs py-1 px-2.5 text-slate-600 hover:text-blue-600"
+                  title="Khôi phục lời dặn mặc định"
+                >
+                  <RotateCcw className="w-3 h-3 mr-1" />
+                  <span>Mặc định</span>
+                </Button>
+                <Button
+                  variant="romantic"
+                  size="sm"
+                  onClick={() => setIsAddingHusbandTip(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                >
+                  <Plus className="w-3.5 h-3.5 mr-1" />
+                  <span>Thêm Lời Dặn</span>
+                </Button>
+              </div>
+            )}
           </div>
-          <div className="bg-blue-50/70 p-3.5 rounded-2xl border border-blue-100 space-y-2 text-xs text-slate-700 font-medium">
-            <p>• <strong>Uống đủ nước:</strong> Nhắc anh uống đủ 2 lít nước mỗi ngày khi làm việc.</p>
-            <p>• <strong>Giấc ngủ ngon:</strong> Nhắc anh không thức quá khuya sau 23h30.</p>
-            <p>• <strong>Tiếp thêm năng lượng:</strong> Chuẩn bị một cái ôm ấm áp để tiếp sức cho anh nhé! ❤️</p>
+
+          {/* Ô thêm nhanh lời dặn */}
+          {isOwner && isAddingHusbandTip && (
+            <div className="mb-3 p-3 rounded-2xl bg-blue-50/90 border border-blue-200 flex items-center gap-2 animate-fade-in shadow-sm">
+              <span className="text-blue-500 font-bold text-sm">•</span>
+              <input
+                type="text"
+                value={newHusbandTipText}
+                onChange={(e) => setNewHusbandTipText(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAddHusbandTip()}
+                placeholder="Ví dụ: Tập thể dục 30p mỗi chiều, Ăn ít dầu mỡ, Đấm lưng..."
+                autoFocus
+                className="flex-1 bg-transparent text-xs font-bold text-slate-800 focus:outline-none placeholder:font-normal"
+              />
+              <button
+                onClick={handleAddHusbandTip}
+                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+              >
+                Lưu
+              </button>
+              <button
+                onClick={() => {
+                  setIsAddingHusbandTip(false);
+                  setNewHusbandTipText('');
+                }}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg text-xs"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {/* Danh sách lời dặn */}
+          <div className="space-y-2">
+            {husbandCareTips.length > 0 ? (
+              husbandCareTips.map((tip, idx) => (
+                <div
+                  key={idx}
+                  className="group flex items-start justify-between gap-2 p-3 rounded-2xl bg-blue-50/70 hover:bg-blue-50/90 border border-blue-100/80 transition-all text-xs text-slate-700 font-medium"
+                >
+                  {isOwner && editingHusbandTipIndex === idx ? (
+                    <div className="flex items-center gap-1.5 w-full">
+                      <input
+                        type="text"
+                        value={editHusbandTipValue}
+                        onChange={(e) => setEditHusbandTipValue(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSaveEditHusbandTip(idx)}
+                        autoFocus
+                        className="flex-1 bg-white border border-blue-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 focus:outline-none"
+                      />
+                      <button
+                        onClick={() => handleSaveEditHusbandTip(idx)}
+                        className="p-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setEditingHusbandTipIndex(null)}
+                        className="p-1.5 text-slate-400 hover:text-slate-600"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-start gap-2 min-w-0 flex-1">
+                        <span className="text-blue-500 font-bold leading-relaxed">•</span>
+                        <span className="leading-relaxed break-words">{tip}</span>
+                      </div>
+
+                      {isOwner && (
+                        <div className="flex items-center gap-1 shrink-0 opacity-80 group-hover:opacity-100">
+                          <button
+                            onClick={() => {
+                              setEditingHusbandTipIndex(idx);
+                              setEditHusbandTipValue(tip);
+                            }}
+                            className="p-1 text-slate-400 hover:text-blue-600 rounded-lg transition-colors"
+                            title="Sửa lời dặn"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteHusbandTip(idx)}
+                            className="p-1 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
+                            title="Xóa lời dặn"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-4 text-xs text-slate-400 italic">
+                {isOwner ? 'Chưa có lời dặn nào. Bấm "+ Thêm Lời Dặn" để lưu nhé!' : 'Chưa có lời dặn chăm sóc nào.'}
+              </div>
+            )}
           </div>
         </Card>
       )}
