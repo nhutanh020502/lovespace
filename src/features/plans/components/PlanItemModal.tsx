@@ -16,16 +16,6 @@ interface PlanItemModalProps {
 
 const COMMON_EMOJIS = ['🚗', '🛵', '🐶', '🍱', '🍵', '🧋', '❤️🔥', '🍜', '🎬', '🛍️', '🏨', '☕', '🍓', '🍰', '🌅', '🎡'];
 
-const TIME_SLOT_PRESETS = [
-  { label: '🌅 Sáng sớm', time: '07:30 - 09:00' },
-  { label: '☕ Buổi sáng', time: '09:00 - 11:00' },
-  { label: '🍱 Ăn trưa', time: '11:15 - 12:30' },
-  { label: '🍵 Cà phê chiều', time: '12:30 - 14:00' },
-  { label: '❤️ Nghỉ ngơi/Vui chơi', time: '14:00 - 18:00' },
-  { label: '🍜 Ăn tối', time: '18:00 - 19:30' },
-  { label: '🌙 Dạo phố đêm', time: '20:00 - 22:30' },
-];
-
 const COST_QUICK_PRESETS = [
   { label: '0đ (Cục chồng chở)', val: '0đ tại có cục chồng chở' },
   { label: '50k', val: '50k' },
@@ -178,23 +168,6 @@ export const PlanItemModal: React.FC<PlanItemModalProps> = ({
             placeholder="Ví dụ: 09:00 - 10:30, 11:15 ~ 12:30, 18:00..."
             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-rose-400"
           />
-          {/* Quick Time Presets */}
-          <div className="flex flex-wrap gap-1 mt-1.5">
-            {TIME_SLOT_PRESETS.map((t, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => setTimeRange(t.time)}
-                className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border transition-all ${
-                  timeRange === t.time
-                    ? 'bg-rose-500 text-white border-rose-500 shadow-xs'
-                    : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-rose-50 hover:text-rose-600'
-                }`}
-              >
-                {t.label} ({t.time})
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* 2. VIỆC CẦN LÀM / HOẠT ĐỘNG */}
