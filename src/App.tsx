@@ -11,6 +11,7 @@ import { ChatView } from './features/chat/components/ChatView';
 import { PlacesView } from './features/places-food/components/PlacesView';
 import { MemoryGalleryView } from './features/gallery/components/MemoryGalleryView';
 import { AuthAndPairingView } from './features/auth/components/AuthAndPairingView';
+import { PWAInstallBanner } from './components/ui/PWAInstallBanner';
 import {
   INITIAL_SETTINGS,
   INITIAL_MOODS,
@@ -774,6 +775,9 @@ export function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 p-3.5 sm:p-5 max-w-2xl mx-auto w-full">
+        {/* Banner Tải & Cài Đặt App Khi Đang Dùng Bản Web */}
+        <PWAInstallBanner />
+
         {activeTab === 'home' && (
           <DashboardView
             currentRole={settings.currentActiveUser}
