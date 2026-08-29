@@ -232,6 +232,15 @@ export function App() {
                 lastUpdated: payload.new.last_updated,
               },
             }));
+            const myPartnerId = settings.currentActiveUser === 'husband' ? settings.partner2.id : settings.partner1.id;
+            if (payload.new.user_id === myPartnerId) {
+              audio.playReminder();
+              showToast(`${partner.nickname} vừa cập nhật hồ sơ sức khỏe! 🩺`);
+              showSystemNotification(
+                `🩺 ${partner.nickname} Cập Nhật Sức Khỏe`,
+                `Tình trạng: ${payload.new.illness_name || 'Bình thường'}`
+              );
+            }
           }
         }
       )
