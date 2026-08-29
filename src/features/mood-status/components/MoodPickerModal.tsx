@@ -4,6 +4,7 @@ import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { Camera, Image as ImageIcon, Link as LinkIcon, Loader2, Sparkles, Plus, Trash2, Check } from 'lucide-react';
 import { uploadImageToCloudinary } from '../../../services/cloudinaryService';
+import { EmojiPickerPalette } from '../../../components/ui/EmojiPickerPalette';
 
 interface MoodPickerModalProps {
   isOpen: boolean;
@@ -206,21 +207,11 @@ export const MoodPickerModal: React.FC<MoodPickerModalProps> = ({
                 </Button>
               </div>
 
-              {/* Emoji quick selector */}
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {POPULAR_EMOJIS.map((emoji) => (
-                  <button
-                    key={emoji}
-                    type="button"
-                    onClick={() => setNewCustomEmoji(emoji)}
-                    className={`text-lg p-1 rounded-lg transition-transform ${
-                      newCustomEmoji === emoji ? 'bg-rose-200 scale-110 shadow-sm' : 'hover:bg-white/80'
-                    }`}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
+              {/* Kho Emoji phong phú hơn 200+ icon phân loại */}
+              <EmojiPickerPalette
+                selectedEmoji={newCustomEmoji}
+                onSelectEmoji={setNewCustomEmoji}
+              />
             </div>
           )}
 

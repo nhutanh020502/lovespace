@@ -4,6 +4,7 @@ import { Settings2, Plus, Trash2, Edit3, RotateCcw, Sparkles } from 'lucide-reac
 import { CustomInteraction, InteractionColorTheme } from '../../../types/common.types';
 import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
+import { EmojiPickerPalette } from '../../../components/ui/EmojiPickerPalette';
 
 interface QuickInteractionBarProps {
   onTriggerInteraction: (interaction: CustomInteraction) => void;
@@ -320,21 +321,11 @@ export const QuickInteractionBar: React.FC<QuickInteractionBarProps> = ({
                 />
               </div>
 
-              {/* Emoji swatch bar */}
-              <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto p-1 bg-white/70 rounded-xl border border-rose-100">
-                {SUGGESTED_EMOJIS.map((em) => (
-                  <button
-                    key={em}
-                    type="button"
-                    onClick={() => setEmoji(em)}
-                    className={`text-lg p-1.5 rounded-lg transition-transform ${
-                      emoji === em ? 'bg-rose-200 scale-110 shadow-sm' : 'hover:bg-white'
-                    }`}
-                  >
-                    {em}
-                  </button>
-                ))}
-              </div>
+              {/* Kho Emoji phong phú hơn 200+ icon phân loại */}
+              <EmojiPickerPalette
+                selectedEmoji={emoji}
+                onSelectEmoji={setEmoji}
+              />
             </div>
 
             {/* 2. Tên Nút */}

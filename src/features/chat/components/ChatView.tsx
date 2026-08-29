@@ -15,6 +15,7 @@ import {
   Heart,
 } from 'lucide-react';
 import { uploadImageToCloudinary } from '../../../services/cloudinaryService';
+import { EmojiPickerPalette } from '../../../components/ui/EmojiPickerPalette';
 
 interface ChatViewProps {
   currentRole: UserRole;
@@ -281,30 +282,22 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
       {/* Quick Romantic Emoji Picker Popup */}
       {showEmojiPicker && (
-        <div className="glass-panel p-3 rounded-2xl mb-2 border border-rose-200 shadow-xl animate-fade-in">
-          <div className="text-[11px] font-bold text-slate-500 mb-2 flex items-center justify-between">
-            <span>Chọn icon cảm xúc nhanh:</span>
+        <div className="glass-panel p-2 rounded-2xl mb-2 border border-rose-200 shadow-xl animate-fade-in">
+          <div className="text-[11px] font-bold text-slate-500 mb-1.5 px-1 flex items-center justify-between">
+            <span>Kho biểu tượng cảm xúc (200+ icon):</span>
             <button
               onClick={() => setShowEmojiPicker(false)}
-              className="text-slate-400 hover:text-slate-600 font-bold"
+              className="text-slate-400 hover:text-slate-600 font-bold px-1.5 py-0.5 rounded-full hover:bg-rose-50"
             >
-              ✕
+              ✕ Đóng
             </button>
           </div>
-          <div className="grid grid-cols-8 gap-2">
-            {QUICK_ROMANTIC_EMOJIS.map((emoji, idx) => (
-              <button
-                key={idx}
-                onClick={() => {
-                  setInputText((prev) => prev + emoji);
-                  setShowEmojiPicker(false);
-                }}
-                className="text-xl hover:scale-125 active:scale-95 transition-transform p-1 rounded-lg hover:bg-rose-50"
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
+          <EmojiPickerPalette
+            selectedEmoji=""
+            onSelectEmoji={(emoji) => {
+              setInputText((prev) => prev + emoji);
+            }}
+          />
         </div>
       )}
 
