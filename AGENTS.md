@@ -106,3 +106,12 @@
   3. Tích hợp đồng bộ 2 chiều: Khi đổi ngày yêu, biệt danh, avatar trong Settings -> Tự động cập nhật `authSession` và cập nhật trực tiếp lên Supabase.
   4. Lắng nghe `postgres_changes` trên bảng `couples` trong Supabase Realtime để khi 1 người đổi ngày yêu/ảnh đại diện thì máy người kia lập tức cập nhật theo thời gian thực.
   5. Khi khởi động app, `loadCloudData()` tự động tải ngày yêu mới nhất từ Cloud, bảo đảm **KHÔNG BAO GIỜ BỊ RESET** về mặc định nữa!
+
+### 📅 [2026-08-30] - Tính Năng Phản Hồi / Trả Lời Trực Tiếp Lời Nhắn & Mood Đối Phương (Quote Reply in Chat)
+- **Hiển thị Lời Nhắn Không Cần Ảnh:** Khi không có ảnh, khung thư tình bóng kính pastel `💬 Lời nhắn từ [Biệt danh]` vẫn hiển thị tuyệt đẹp với icon cảm xúc to rõ.
+- **Nút "Nhắn Tin Ngay" 1-Chạm Rep Lời Nhắn:** Bấm "Nhắn Tin Ngay" ở Dashboard sẽ tự động chuyển sang tab Chat kèm banner trích dẫn đang rep lời nhắn của đối phương.
+- **Khung Bong Bóng Chat Trích Dẫn Chuẩn Sang Trọng:**
+  - Tin nhắn gửi đi sẽ đính kèm trích dẫn nguyên vẹn thẻ cảm xúc: Biệt danh, Emoji tâm trạng, Lời nhắn trích dẫn (hoặc thumbnail ảnh nếu có).
+  - Phản hồi bên dưới hiển thị rõ ràng nội dung câu trả lời.
+  - Đồng bộ 2 chiều qua Supabase Realtime WebSocket với cột `reply_to_mood JSONB`.
+
