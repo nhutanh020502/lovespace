@@ -125,7 +125,7 @@ export const MemoryGalleryView: React.FC<MemoryGalleryViewProps> = ({
 
     // Chạy song song: Upload ảnh lên Cloudinary & Lấy GPS location
     const [uploadedUrl, gpsResult] = await Promise.all([
-      uploadImageToCloudinary(file),
+      uploadImageToCloudinary(file, 'memories'),
       fetchCurrentGPSAddress(),
     ]);
 

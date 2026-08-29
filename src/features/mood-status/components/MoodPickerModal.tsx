@@ -141,7 +141,7 @@ export const MoodPickerModal: React.FC<MoodPickerModalProps> = ({
 
     setIsUploading(true);
     try {
-      const url = await uploadImageToCloudinary(file);
+      const url = await uploadImageToCloudinary(file, 'memes');
       if (url) {
         setPhotoUrl(url);
         const newMeme = {

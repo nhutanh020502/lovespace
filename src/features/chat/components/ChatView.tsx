@@ -85,7 +85,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
     setShowEmojiPicker(false);
 
     try {
-      const url = await uploadImageToCloudinary(file);
+      const url = await uploadImageToCloudinary(file, 'chat');
       if (url) {
         onSendMessage({ imageUrl: url });
       } else {

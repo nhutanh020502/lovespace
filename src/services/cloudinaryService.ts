@@ -3,11 +3,16 @@
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'gin1ykc1';
 const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'lovespace_preset';
 
+export type ImageUploadCategory = 'memes' | 'chat' | 'memories' | 'avatars';
+
 /**
  * Tải ảnh trực tiếp lên Cloudinary (Unsigned upload)
- * Nếu chưa tạo preset trên Cloudinary hoặc lỗi mạng, tự động chuyển về Base64 Data URL để không làm gián đoạn trải nghiệm người dùng
+ * Phân chia thư mục độc lập cho Meme, Tin nhắn Chat, và Kho Kỷ Niệm để không bao giờ bị đụng độ dữ liệu
  */
-export async function uploadImageToCloudinary(file: File): Promise<string> {
+export async function uploadImageToCloudinary(
+  file: File,
+  category: ImageUploadCategory = 'memes'
+): Promise<string> {
   if (!CLOUD_NAME) {
     return fileToBase64(file);
   }
@@ -16,7 +21,8 @@ export async function uploadImageToCloudinary(file: File): Promise<string> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', UPLOAD_PRESET);
-    formData.append('folder', 'lovespace');
+    formData.append('folder', `lovespace/${category}`);
+    formData.append('tags', `lovespace,${category}`);
 
     const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
       method: 'POST',
