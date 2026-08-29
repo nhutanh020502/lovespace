@@ -449,13 +449,21 @@ export async function deleteMemory(memoryId: string) {
 // ==============================================================================
 // 7. REALTIME INTERACTION BROADCAST (Thả tim, Hôn, Nhắc nước, Ôm, Nhắc thuốc)
 // ==============================================================================
-export type CoupleBroadcastType = 'heart' | 'kiss' | 'water' | 'hug' | 'medicine' | 'todo_completed';
+export type CoupleBroadcastType =
+  | 'heart'
+  | 'kiss'
+  | 'water'
+  | 'hug'
+  | 'medicine'
+  | 'todo_completed'
+  | string;
 
 export interface CoupleBroadcastPayload {
   type: CoupleBroadcastType;
   senderRole: 'husband' | 'wife';
   senderName: string;
   detail?: string;
+  customText?: string;
   timestamp: string;
 }
 
