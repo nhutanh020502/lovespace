@@ -1,18 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePWAInstall } from '../../hooks/usePWAInstall';
-import { Download, Smartphone, X, Share, PlusSquare, Sparkles, Package } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import { Download, Smartphone, X, Share, PlusSquare, Sparkles } from 'lucide-react';
 import { Modal } from './Modal';
 import { Button } from './Button';
 
 export const PWAInstallBanner: React.FC = () => {
   const { isInstalled, isIOS, triggerInstall } = usePWAInstall();
-  const [isDismissed, setIsDismissed] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(() => {
+    return localStorage.getItem('lovespace_pwa_banner_dismissed') === 'true';
+  });
   const [isIOSModalOpen, setIsIOSModalOpen] = useState(false);
 
-  // Nếu app đã được cài đặt và đang chạy ở chế độ App độc lập, hoặc người dùng tắt banner -> ẩn banner
-  if (isInstalled || isDismissed) {
+  // 1. Kiểm tra tuyệt đối: Nếu đang chạy trên Native App (Capacitor), WebView điện thoại, Standalone PWA hoặc đã tắt -> Ẩn 100%
+  const isNativeApp =
+    Capacitor.isNativePlatform() ||
+    isInstalled ||
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.matchMedia('(display-mode: fullscreen)').matches ||
+    window.matchMedia('(display-mode: minimal-ui)').matches ||
+    (window.navigator as any).standalone === true ||
+    /wv|capacitor/i.test(window.navigator.userAgent);
+
+  if (isNativeApp || isDismissed) {
     return null;
   }
+
+  const handleDismiss = () => {
+    setIsDismissed(true);
+    localStorage.setItem('lovespace_pwa_banner_dismissed', 'true');
+  };
 
   const handlePwaClick = async () => {
     const res = await triggerInstall();
@@ -56,7 +73,7 @@ export const PWAInstallBanner: React.FC = () => {
           </a>
 
           <button
-            onClick={() => setIsDismissed(true)}
+            onClick={handleDismiss}
             className="p-1 rounded-lg text-rose-200 hover:text-white hover:bg-white/10 transition-colors"
             title="Đóng banner"
           >

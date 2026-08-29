@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -11,19 +12,29 @@ export function usePWAInstall() {
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
-    // 1. Kiểm tra xem app có đang chạy ở chế độ Standalone (đã cài đặt) không
+    // 1. Kiểm tra nếu đang chạy trong App Native (Capacitor Android / iOS)
+    const isNative = Capacitor.isNativePlatform();
+
+    // 2. Kiểm tra nếu app đang chạy ở chế độ Standalone PWA (đã cài đặt vào màn hình chính)
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true;
+      window.matchMedia('(display-mode: fullscreen)').matches ||
+      window.matchMedia('(display-mode: minimal-ui)').matches ||
+      (window.navigator as any).standalone === true ||
+      document.referrer.includes('android-app://');
 
-    setIsInstalled(isStandalone);
-
-    // 2. Kiểm tra có phải iOS không (iPhone / iPad)
+    // 3. Kiểm tra Android WebView
     const userAgent = window.navigator.userAgent.toLowerCase();
+    const isAndroidWebView = /wv|capacitor/i.test(userAgent);
+
+    const isRunningAsApp = isNative || isStandalone || isAndroidWebView;
+    setIsInstalled(isRunningAsApp);
+
+    // 4. Kiểm tra có phải iOS không (iPhone / iPad)
     const isIosDevice = /iphone|ipad|ipod/.test(userAgent);
     setIsIOS(isIosDevice);
 
-    // 3. Lắng nghe sự kiện beforeinstallprompt của Chromium (Android, Chrome, Edge)
+    // 5. Lắng nghe sự kiện beforeinstallprompt của Chromium (Android, Chrome, Edge)
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
