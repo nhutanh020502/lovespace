@@ -31,75 +31,57 @@ export const PartnerStatusHero: React.FC<PartnerStatusHeroProps> = ({
   const currentDisplayUser = viewRole === 'partner' ? partner : me;
   const currentDisplayMood = viewRole === 'partner' ? partnerMood : myMood;
 
-  const getMoodConfig = (mood: string) => {
-    switch (mood) {
+  const getMoodConfig = (mood: MoodStatus) => {
+    // 1. Nếu là tâm trạng tự tạo riêng (Custom mood)
+    if (mood.customLabel || mood.customEmoji) {
+      return {
+        text: `${mood.customEmoji || '✨'} ${mood.customLabel || 'Tâm trạng riêng'}`,
+        variant: 'rose' as const,
+        glowColor: 'from-rose-500/35 to-pink-400/20',
+        emoji: mood.customEmoji || '✨',
+      };
+    }
+
+    switch (mood.mood) {
       case 'happy':
-        return {
-          text: '🥰 Đang rất vui vẻ',
-          variant: 'rose' as const,
-          glowColor: 'from-rose-500/30 to-pink-400/20',
-          emoji: '🥰',
-        };
-      case 'pouting':
-        return {
-          text: '😤 Đang giận dỗi nè',
-          variant: 'amber' as const,
-          glowColor: 'from-amber-500/35 to-orange-400/20',
-          emoji: '😤',
-        };
-      case 'hungry':
-        return {
-          text: '🤤 Đói bụng thèm ăn',
-          variant: 'pink' as const,
-          glowColor: 'from-pink-500/30 to-rose-400/20',
-          emoji: '🧋',
-        };
-      case 'tired':
-        return {
-          text: '😴 Hơi mệt mỏi',
-          variant: 'purple' as const,
-          glowColor: 'from-purple-500/30 to-indigo-400/20',
-          emoji: '😴',
-        };
+        return { text: '🥰 Vui vẻ / Yêu đời', variant: 'rose' as const, glowColor: 'from-rose-500/30 to-pink-400/20', emoji: '🥰' };
       case 'missing_you':
-        return {
-          text: '💭 Đang nhớ người yêu',
-          variant: 'rose' as const,
-          glowColor: 'from-rose-600/35 to-pink-500/25',
-          emoji: '💖',
-        };
-      case 'sick':
-        return {
-          text: '🤒 Đang bị ốm',
-          variant: 'slate' as const,
-          glowColor: 'from-blue-400/30 to-slate-400/20',
-          emoji: '🤒',
-        };
-      case 'busy':
-        return {
-          text: '💼 Đang bận việc',
-          variant: 'blue' as const,
-          glowColor: 'from-blue-500/25 to-indigo-400/20',
-          emoji: '💼',
-        };
+        return { text: '💭 Đang nhớ người yêu', variant: 'rose' as const, glowColor: 'from-rose-600/35 to-pink-500/25', emoji: '💖' };
+      case 'pouting':
+        return { text: '😤 Đang dỗi hờn', variant: 'amber' as const, glowColor: 'from-amber-500/35 to-orange-400/20', emoji: '😤' };
+      case 'hungry':
+        return { text: '🤤 Đói bụng thèm ăn', variant: 'pink' as const, glowColor: 'from-pink-500/30 to-rose-400/20', emoji: '🤤' };
+      case 'sleepy':
+      case 'tired':
+        return { text: '😴 Buồn ngủ / Mệt', variant: 'purple' as const, glowColor: 'from-purple-500/30 to-indigo-400/20', emoji: '😴' };
+      case 'want_hug':
+        return { text: '🥺 Muốn được ôm 🫂', variant: 'rose' as const, glowColor: 'from-rose-500/35 to-pink-400/25', emoji: '🥺' };
       case 'excited':
-        return {
-          text: '🥳 Hào hứng phấn khởi',
-          variant: 'emerald' as const,
-          glowColor: 'from-emerald-500/30 to-teal-400/20',
-          emoji: '🎉',
-        };
+        return { text: '🥳 Hào hứng phấn khởi', variant: 'emerald' as const, glowColor: 'from-emerald-500/30 to-teal-400/20', emoji: '🥳' };
+      case 'boba':
+        return { text: '🧋 Thèm trà sữa', variant: 'amber' as const, glowColor: 'from-amber-500/30 to-orange-300/20', emoji: '🧋' };
+      case 'want_hangout':
+        return { text: '🌴 Muốn đi chơi 🚗', variant: 'emerald' as const, glowColor: 'from-teal-500/30 to-emerald-400/20', emoji: '🌴' };
+      case 'cuddle':
+        return { text: '🧸 Cần dỗ dành 💕', variant: 'pink' as const, glowColor: 'from-pink-500/35 to-rose-400/20', emoji: '🧸' };
+      case 'grumpy':
+        return { text: '😡 Đang quạu / Khó ở', variant: 'amber' as const, glowColor: 'from-red-500/35 to-orange-400/20', emoji: '😡' };
+      case 'sick':
+        return { text: '🤒 Hơi ốm / Mệt', variant: 'slate' as const, glowColor: 'from-blue-400/30 to-slate-400/20', emoji: '🤒' };
+      case 'busy':
+        return { text: '💼 Đang bận việc', variant: 'blue' as const, glowColor: 'from-blue-500/25 to-indigo-400/20', emoji: '💼' };
+      case 'chill':
+        return { text: '☕ Chill thư giãn', variant: 'purple' as const, glowColor: 'from-purple-400/30 to-pink-300/20', emoji: '☕' };
+      case 'pretty':
+        return { text: '👑 Xinh đẹp tự tin 💅', variant: 'pink' as const, glowColor: 'from-pink-500/35 to-rose-400/25', emoji: '👑' };
+      case 'thinking':
+        return { text: '✨ Đang suy nghĩ 🤔', variant: 'blue' as const, glowColor: 'from-indigo-400/30 to-purple-400/20', emoji: '🤔' };
       default:
-        return {
-          text: '✨ Bình thường',
-          variant: 'rose' as const,
-          glowColor: 'from-rose-400/25 to-pink-300/15',
-          emoji: '✨',
-        };
+        return { text: '✨ Bình thường', variant: 'rose' as const, glowColor: 'from-rose-400/25 to-pink-300/15', emoji: '✨' };
     }
   };
 
-  const moodConfig = getMoodConfig(currentDisplayMood.mood);
+  const moodConfig = getMoodConfig(currentDisplayMood);
 
   return (
     <Card

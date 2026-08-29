@@ -13,21 +13,32 @@ export interface UserProfile {
   lastActive?: string;
 }
 
-export type MoodType = 
-  | 'happy'       // Vui vẻ 🥰
-  | 'pouting'     // Đang dỗi / Giận 😤
-  | 'hungry'      // Đói bụng 🤤
-  | 'tired'       // Mệt mỏi 😴
-  | 'missing_you' // Đang nhớ 💭
-  | 'sick'        // Đang ốm 🤒
-  | 'busy'        // Đang bận 💼
-  | 'excited';    // Hào hứng 🥳
+export type MoodType =
+  | 'happy'
+  | 'pouting'
+  | 'hungry'
+  | 'tired'
+  | 'missing_you'
+  | 'sick'
+  | 'busy'
+  | 'excited'
+  | 'sleepy'
+  | 'want_hug'
+  | 'want_hangout'
+  | 'need_cuddle'
+  | 'grumpy'
+  | 'loving'
+  | 'thinking'
+  | 'chill'
+  | string;
 
 export interface MoodStatus {
   userId: string;
   mood: MoodType;
   caption: string;
-  photoUrl?: string; // Ảnh meme hoặc ảnh selfie thật
+  customEmoji?: string;
+  customLabel?: string;
+  photoUrl?: string; // Ảnh từ máy người dùng hoặc chụp camera
   updatedAt: string;
   isCustomPhoto?: boolean;
 }
