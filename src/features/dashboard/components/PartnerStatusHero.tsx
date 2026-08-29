@@ -167,8 +167,8 @@ export const PartnerStatusHero: React.FC<PartnerStatusHeroProps> = ({
         )}
       </div>
 
-      {/* Main Visual Image / Meme Section with Ambient Glow Frame */}
-      {currentDisplayMood.photoUrl && (
+      {/* Main Visual Image / Meme Section OR Romantic Caption Bubble */}
+      {currentDisplayMood.photoUrl ? (
         <motion.div
           layout
           initial={{ opacity: 0, scale: 0.96 }}
@@ -184,13 +184,42 @@ export const PartnerStatusHero: React.FC<PartnerStatusHeroProps> = ({
           />
 
           {/* Luxury Gradient Caption Overlay */}
-          <div className="absolute bottom-0 left-0 right-0 p-3.5 sm:p-4 bg-gradient-to-t from-slate-950/85 via-slate-950/45 to-transparent text-white">
-            <p className="text-xs sm:text-sm font-bold leading-snug drop-shadow-md">
-              "{currentDisplayMood.caption}"
-            </p>
+          {currentDisplayMood.caption && (
+            <div className="absolute bottom-0 left-0 right-0 p-3.5 sm:p-4 bg-gradient-to-t from-slate-950/85 via-slate-950/45 to-transparent text-white">
+              <p className="text-xs sm:text-sm font-bold leading-snug drop-shadow-md">
+                "{currentDisplayMood.caption}"
+              </p>
+            </div>
+          )}
+        </motion.div>
+      ) : currentDisplayMood.caption ? (
+        <motion.div
+          layout
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="my-3 p-4 sm:p-4.5 rounded-2xl bg-gradient-to-r from-rose-50/90 via-pink-50/90 to-purple-50/90 border border-rose-200/80 shadow-xs relative overflow-hidden group"
+        >
+          <div className="absolute -right-3 -bottom-3 text-5xl opacity-10 select-none pointer-events-none group-hover:scale-110 transition-transform">
+            {moodConfig.emoji}
+          </div>
+          <div className="flex items-start gap-3 relative z-10">
+            <span className="text-2xl shrink-0 select-none p-1.5 bg-white rounded-xl shadow-xs border border-rose-100">
+              {moodConfig.emoji}
+            </span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="text-[10px] font-black uppercase tracking-wider text-rose-600 bg-rose-100/70 px-2 py-0.5 rounded-full">
+                  💬 Lời nhắn {viewRole === 'partner' ? `từ ${partner.nickname}` : 'của bạn'}
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm font-extrabold text-slate-800 leading-relaxed italic">
+                "{currentDisplayMood.caption}"
+              </p>
+            </div>
           </div>
         </motion.div>
-      )}
+      ) : null}
 
       {/* Footer Quick Actions */}
       <div className="flex items-center gap-2 pt-2.5 border-t border-slate-100">
