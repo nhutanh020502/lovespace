@@ -294,11 +294,11 @@ export const AuthAndPairingView: React.FC<AuthAndPairingViewProps> = ({ onAuthSu
               ) : (
                 <LogIn className="w-5 h-5 mr-2" />
               )}
-              {isLoading ? 'Đang kiểm tra...' : 'Vào Không Gian Yêu 🚀'}
+              {isLoading ? 'Đang kiểm tra...' : 'Đăng Nhập / Tiếp Tục 🚀'}
             </Button>
 
             <p className="text-[11px] text-slate-400 text-center leading-relaxed">
-              💡 Nếu bạn đã có tài khoản, hệ thống sẽ <strong>tự động mở thẳng vào phòng đôi</strong> của bạn ngay lập tức!
+              💡 Nhập SĐT và bấm <strong>Đăng Nhập</strong>: Nếu đã có phòng, app sẽ tự động bay thẳng vào ngay!
             </p>
           </form>
         )}
