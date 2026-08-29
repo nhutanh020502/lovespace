@@ -76,12 +76,12 @@
   10. 📸 **Lưu kỷ niệm mới:** Báo ghi chú khoảnh khắc kỷ niệm mới.
 - Thêm nút kích hoạt nhanh quyền thông báo (Chuông thông minh) trên thanh điều hướng đầu trang (`TopHeader.tsx`).
 
-### 📅 [2026-08-29] - Tích Hợp Hệ Thống Đăng Nhập Bằng SĐT & Ghép Đôi 1-1 (Couple Pairing)
-- **Cơ chế Đăng nhập & Ghép đôi siêu đơn giản bằng Số Điện Thoại:**
-  - Không cần mật khẩu rườm rà hay tài khoản Google.
-  - **Tạo Không Gian Mới:** Nhập SĐT, Tên, Chọn vai trò (Chồng 🐻 / Vợ 🐰) -> Sinh mã ghép đôi 6 ký tự (VD: `LOVE8899`) + nút chia sẻ lời mời qua Zalo.
-  - **Nhập Mã Ghép Đôi:** Người yêu chỉ cần nhập mã 6 ký tự -> Tự động nhận vai trò còn lại và ghép đôi 2 máy thành công.
-  - **Lắng nghe Realtime:** Màn hình chờ tự động nổ pháo hoa và chuyển thẳng vào app ngay khi người yêu nhập mã thành công.
-  - **Khóa phòng 2 người:** Đảm bảo mỗi mối quan hệ chỉ có đúng 2 người, không ai khác vào được.
-  - **Tự động khôi phục:** Nhập lại SĐT đã đăng ký sẽ tự động mở lại đúng Không Gian Yêu cũ.
-  - **Bổ sung nút Đăng Xuất:** Trong cài đặt `SettingsModal.tsx`.
+### 📅 [2026-08-29] - Nâng Cấp Kho Kỷ Niệm (Chụp Ảnh Camera Liền, Tự Động Định Vị GPS & 2 Tab)
+- **📸 Chụp Ảnh Camera 1-Chạm:** Bấm nút chụp là mở thẳng camera thiết bị chụp và upload tự động.
+- **📍 Tự Động Lưu Địa Chỉ GPS:** Tích hợp Geolocation và Nominatim OpenStreetMap tự động lấy tên đường, quận, thành phố khi chụp ảnh.
+- **🔗 Dán Link Ảnh Trực Tiếp & Link Địa Điểm:** Hỗ trợ nhập URL ảnh từ internet và link Google Maps / TikTok review.
+- **🗂️ Phân Chia 2 Tab Riêng Biệt:** 
+  - `📸 Ảnh Kỷ Niệm Đôi 💕` (Ảnh selfie, khoảnh khắc ngọt ngào 2 người).
+  - `🍽️ Điểm Hẹn & Ăn Chơi 🌴` (Check-in quán ăn, du lịch, tiệm cà phê).
+- **📱 Build và Cập Nhật File Cài Đặt `LoveSpace.apk` Trực Tiếp:** Tải về máy từ web với 1 click.
+- **✨ Tối Ưu Font Chữ & Responsive Toàn Diện:** Font `Plus Jakarta Sans` chuẩn tiếng Việt và Header co giãn mượt mà.

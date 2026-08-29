@@ -12,6 +12,8 @@ import { PlacesView } from './features/places-food/components/PlacesView';
 import { MemoryGalleryView } from './features/gallery/components/MemoryGalleryView';
 import { AuthAndPairingView } from './features/auth/components/AuthAndPairingView';
 import { PWAInstallBanner } from './components/ui/PWAInstallBanner';
+import { RomanticAuroraBackground } from './components/ui/RomanticAuroraBackground';
+import { ParticleHeartTrail } from './components/ui/ParticleHeartTrail';
 import {
   INITIAL_SETTINGS,
   INITIAL_MOODS,
@@ -739,7 +741,13 @@ export function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 text-slate-800 flex flex-col font-sans selection:bg-rose-200">
+    <div className="min-h-screen relative text-slate-800 flex flex-col font-sans selection:bg-rose-200 overflow-x-hidden">
+      {/* Living Ambient Romantic Aurora Background */}
+      <RomanticAuroraBackground />
+
+      {/* Interactive Touch Particle Heart Trail */}
+      <ParticleHeartTrail />
+
       {/* Toast Popup Notification */}
       {toastMessage && (
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-slate-900/90 backdrop-blur-md text-white text-xs font-bold rounded-full shadow-xl border border-white/20 animate-fade-in pointer-events-none">
@@ -773,8 +781,8 @@ export function App() {
         }}
       />
 
-      {/* Main Content Area */}
-      <main className="flex-1 p-3.5 sm:p-5 max-w-2xl mx-auto w-full">
+      {/* Main Content Area with Safe Spacing for Floating Dock */}
+      <main className="flex-1 p-3.5 sm:p-5 pb-28 max-w-2xl mx-auto w-full relative z-10">
         {/* Banner Tải & Cài Đặt App Khi Đang Dùng Bản Web */}
         <PWAInstallBanner />
 

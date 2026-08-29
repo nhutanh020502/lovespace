@@ -368,19 +368,22 @@ export const MemoryGalleryView: React.FC<MemoryGalleryViewProps> = ({
           {filteredMemories.map((mem) => (
             <Card
               key={mem.id}
-              variant="glass"
-              className="p-3 overflow-hidden border border-rose-100/80 hover:shadow-lg transition-all group flex flex-col justify-between"
+              variant="polaroid"
+              className="p-3.5 pb-2.5 overflow-hidden group flex flex-col justify-between relative rounded-3xl"
             >
+              {/* Cute Washi Tape Sticker at Top Center */}
+              <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-16 h-3 bg-pink-200/70 backdrop-blur-sm rounded-sm shadow-sm rotate-1 z-10 pointer-events-none" />
+
               <div>
                 {/* Photo Image with Click to Lightbox */}
                 <div
                   onClick={() => setSelectedPhoto(mem)}
-                  className="relative aspect-video rounded-2xl overflow-hidden cursor-pointer bg-slate-100 shadow-inner group/img"
+                  className="relative aspect-video rounded-2xl overflow-hidden cursor-pointer bg-slate-100 shadow-inner group/img border border-black/5"
                 >
                   <img
                     src={mem.photoUrl}
                     alt={mem.note}
-                    className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover group-hover/img:scale-105 transition-transform duration-500"
                     loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity flex items-end p-2.5">
@@ -391,22 +394,22 @@ export const MemoryGalleryView: React.FC<MemoryGalleryViewProps> = ({
                   </div>
 
                   {/* Badge Date */}
-                  <span className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md text-[10px] font-bold text-white flex items-center gap-1">
+                  <span className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-[10px] font-bold text-white flex items-center gap-1 shadow-sm">
                     <Calendar className="w-3 h-3 text-rose-300" />
                     <span>{formatDateVi(mem.date)}</span>
                   </span>
                 </div>
 
                 {/* Info & Story Note */}
-                <div className="mt-2.5 space-y-1.5">
+                <div className="mt-3 space-y-1.5 px-0.5">
                   <div className="flex items-center justify-between text-xs text-slate-500">
-                    <div className="flex items-center gap-1 text-rose-600 font-bold truncate" title={mem.location}>
+                    <div className="flex items-center gap-1 text-rose-600 font-black truncate" title={mem.location}>
                       <MapPin className="w-3.5 h-3.5 shrink-0" />
                       <span className="truncate">{mem.location || 'Địa điểm ngọt ngào'}</span>
                     </div>
                   </div>
 
-                  <p className="text-xs sm:text-sm font-semibold text-slate-800 line-clamp-2 leading-relaxed">
+                  <p className="text-xs sm:text-sm font-bold text-slate-800 line-clamp-2 leading-relaxed">
                     {mem.note}
                   </p>
 

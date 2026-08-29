@@ -7,38 +7,195 @@
     -webkit-tap-highlight-color: transparent;
   }
   
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     overflow-x: hidden;
     user-select: none;
+    background-color: #fff1f2;
+    color: #1e293b;
+    font-family: 'Plus Jakarta Sans', 'Quicksand', sans-serif;
   }
 }
 
-/* Custom Glassmorphism styles */
+/* ============================================================================== */
+/* LUXURY ROMANTIC GLASSMORPHISM & HOLOGRAPHIC STYLES */
+/* ============================================================================== */
+
 .glass-panel {
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 10px 30px -10px rgba(244, 63, 94, 0.08), 0 4px 12px 0 rgba(0, 0, 0, 0.03);
 }
 
 .glass-panel-romantic {
-  background: linear-gradient(135deg, rgba(255, 241, 242, 0.85) 0%, rgba(255, 255, 255, 0.75) 100%);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(254, 205, 211, 0.6);
+  background: linear-gradient(135deg, rgba(255, 245, 245, 0.88) 0%, rgba(255, 255, 255, 0.75) 100%);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  border: 1px solid rgba(254, 205, 211, 0.65);
+  box-shadow: 0 12px 35px -10px rgba(244, 63, 94, 0.12), 0 4px 16px 0 rgba(244, 63, 94, 0.04);
 }
 
-.glass-nav {
+.glass-panel-luxury {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 241, 242, 0.7) 100%);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 
+    0 16px 40px -12px rgba(244, 63, 94, 0.15),
+    0 0 0 1px rgba(254, 205, 211, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* Hologram Iridescent Border Sheen */
+.hologram-border {
+  position: relative;
+}
+.hologram-border::before {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(
+    115deg,
+    rgba(244, 63, 94, 0.4),
+    rgba(251, 146, 60, 0.3),
+    rgba(236, 72, 153, 0.4),
+    rgba(168, 85, 247, 0.3),
+    rgba(244, 63, 94, 0.4)
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  background-size: 200% 200%;
+  animation: hologramShift 6s ease infinite;
+}
+
+@keyframes hologramShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Floating Dock Navigation */
+.floating-dock {
   background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid rgba(254, 205, 211, 0.4);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 
+    0 20px 40px -15px rgba(244, 63, 94, 0.2),
+    0 4px 20px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+/* Heartwave Concentric Rings */
+@keyframes heartwave {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+
+.animate-heartwave-1 {
+  animation: heartwave 3s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+.animate-heartwave-2 {
+  animation: heartwave 3s cubic-bezier(0.2, 0.8, 0.2, 1) infinite 1s;
+}
+.animate-heartwave-3 {
+  animation: heartwave 3s cubic-bezier(0.2, 0.8, 0.2, 1) infinite 2s;
+}
+
+/* Aurora background fluid animations */
+@keyframes auroraOrb1 {
+  0%, 100% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(40px, -60px) scale(1.15); }
+  66% { transform: translate(-30px, 40px) scale(0.95); }
+}
+
+@keyframes auroraOrb2 {
+  0%, 100% { transform: translate(0px, 0px) scale(1); }
+  33% { transform: translate(-50px, 50px) scale(1.2); }
+  66% { transform: translate(35px, -45px) scale(0.9); }
+}
+
+@keyframes auroraOrb3 {
+  0%, 100% { transform: translate(0px, 0px) scale(1); }
+  50% { transform: translate(60px, 30px) scale(1.1); }
+}
+
+.animate-aurora-1 {
+  animation: auroraOrb1 18s ease-in-out infinite;
+}
+.animate-aurora-2 {
+  animation: auroraOrb2 22s ease-in-out infinite;
+}
+.animate-aurora-3 {
+  animation: auroraOrb3 20s ease-in-out infinite;
+}
+
+/* Polaroid Card Style */
+.polaroid-card {
+  background: #ffffff;
+  box-shadow: 
+    0 12px 28px -8px rgba(0, 0, 0, 0.08),
+    0 4px 12px -2px rgba(244, 63, 94, 0.08),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+}
+.polaroid-card:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 
+    0 20px 40px -10px rgba(244, 63, 94, 0.18),
+    0 8px 20px -4px rgba(0, 0, 0, 0.08);
+}
+
+/* Shimmer Button Light */
+.shimmer-button {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer-button::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    60deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 80%
+  );
+  transform: translateX(-100%) rotate(25deg);
+  animation: shimmerSweep 4s infinite;
+}
+
+@keyframes shimmerSweep {
+  0%, 60% { transform: translateX(-100%) rotate(25deg); }
+  100% { transform: translateX(100%) rotate(25deg); }
 }
 
 /* Custom subtle scrollbar */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -46,19 +203,19 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(244, 63, 94, 0.2);
+  background: rgba(244, 63, 94, 0.25);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(244, 63, 94, 0.4);
+  background: rgba(244, 63, 94, 0.5);
 }
 
-/* Safe area insets for notched phones */
+/* Safe area insets for mobile */
 .safe-bottom {
-  padding-bottom: env(safe-area-inset-bottom, 16px);
+  padding-bottom: max(env(safe-area-inset-bottom, 16px), 16px);
 }
 
 .safe-top {
-  padding-top: env(safe-area-inset-top, 16px);
+  padding-top: max(env(safe-area-inset-top, 16px), 16px);
 }

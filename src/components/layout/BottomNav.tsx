@@ -1,5 +1,6 @@
 import React from 'react';
 import { Home, HeartPulse, MessageCircleHeart, UtensilsCrossed, Images } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { clsx } from 'clsx';
 
 export type TabType = 'home' | 'health' | 'chat' | 'places' | 'memories';
@@ -13,7 +14,7 @@ interface BottomNavProps {
 export const BottomNav: React.FC<BottomNavProps> = ({
   activeTab,
   onTabChange,
-  unreadCount = 0
+  unreadCount = 0,
 }) => {
   const navItems = [
     { id: 'home' as TabType, label: 'Trang Chủ', icon: Home },
@@ -24,8 +25,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 glass-nav safe-bottom transition-all">
-      <div className="max-w-2xl mx-auto flex items-center justify-around px-2 py-1.5 sm:py-2">
+    <div className="fixed bottom-3 left-0 right-0 z-40 px-3 pointer-events-none flex justify-center safe-bottom">
+      <nav className="pointer-events-auto floating-dock rounded-full px-2 py-1.5 max-w-md w-full flex items-center justify-around shadow-luxury border border-white/80">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -35,31 +36,44 @@ export const BottomNav: React.FC<BottomNavProps> = ({
               key={item.id}
               onClick={() => onTabChange(item.id)}
               className={clsx(
-                'relative flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all duration-200 cursor-pointer active:scale-90',
-                isActive
-                  ? 'text-rose-600 font-bold scale-105'
-                  : 'text-slate-500 hover:text-slate-700 font-medium'
+                'relative flex flex-col items-center justify-center py-1.5 px-3 rounded-full transition-all duration-300 cursor-pointer active:scale-90 select-none',
+                isActive ? 'text-rose-600 font-extrabold' : 'text-slate-400 hover:text-slate-600 font-semibold'
               )}
             >
-              {/* Active Pill Indicator */}
+              {/* Fluid Sliding Active Indicator with Spring Motion */}
               {isActive && (
-                <div className="absolute inset-0 bg-rose-100/70 rounded-2xl -z-10 shadow-sm shadow-rose-200/50" />
+                <motion.div
+                  layoutId="activeNavBubble"
+                  className="absolute inset-0 bg-gradient-to-tr from-rose-100/90 via-pink-100/80 to-rose-50/90 rounded-full -z-10 shadow-sm border border-rose-200/50"
+                  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                />
               )}
 
               <div className="relative">
-                <Icon className={clsx('w-5 h-5 transition-transform', isActive && 'stroke-[2.5px] animate-bounce-subtle')} />
+                <motion.div
+                  animate={isActive ? { scale: [1, 1.2, 1], rotate: [0, -6, 6, 0] } : { scale: 1 }}
+                  transition={{ duration: 0.35 }}
+                >
+                  <Icon
+                    className={clsx(
+                      'w-5 h-5 transition-colors',
+                      isActive ? 'stroke-[2.5px] text-rose-600 drop-shadow-[0_2px_8px_rgba(244,63,94,0.4)]' : 'text-slate-400'
+                    )}
+                  />
+                </motion.div>
+
                 {item.badge && item.badge > 0 ? (
-                  <span className="absolute -top-1 -right-2 bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full ring-2 ring-white">
+                  <span className="absolute -top-1.5 -right-2 bg-gradient-to-r from-rose-500 to-pink-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full ring-2 ring-white shadow-sm animate-pulse">
                     {item.badge}
                   </span>
                 ) : null}
               </div>
 
-              <span className="text-[11px] mt-0.5 tracking-tight">{item.label}</span>
+              <span className="text-[10px] sm:text-[11px] mt-0.5 tracking-tight">{item.label}</span>
             </button>
           );
         })}
-      </div>
-    </nav>
+      </nav>
+    </div>
   );
 };
