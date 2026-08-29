@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { UserRole, UserProfile, MoodStatus, TodoItem, HealthStatus } from '../../../types/common.types';
 import { LoveCounterCard } from './LoveCounterCard';
 import { PartnerStatusHero } from './PartnerStatusHero';
-import { SOSRescueBanner } from './SOSRescueBanner';
 import { QuickInteractionBar } from './QuickInteractionBar';
 import { TodoSection } from '../../todo/components/TodoSection';
 import { MoodPickerModal } from '../../mood-status/components/MoodPickerModal';
@@ -78,16 +77,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* 1. Đồng Hồ Đếm Ngày Yêu Nhau */}
       <LoveCounterCard startDate={anniversaryDate} />
 
-      {/* 2. Banner Cứu Hộ / Dỗ Dành khi Đối Phương Đang Dỗi hoặc Đang Đói */}
-      {(partnerMood.mood === 'pouting' || partnerMood.mood === 'hungry') && (
-        <SOSRescueBanner
-          favoriteFood={partnerHealth?.favoriteComfortFoods?.[0]}
-          onOpenPlaces={() => onNavigateTab('places')}
-          onSendHug={onSendHug}
-        />
-      )}
-
-      {/* 3. Hero Trạng Thái & Cảm Xúc Bằng Hình Ảnh / Meme của Đối Phương hoặc của Tôi */}
+      {/* 2. Hero Trạng Thái & Cảm Xúc Bằng Hình Ảnh / Meme của Đối Phương hoặc của Tôi */}
       <PartnerStatusHero
         me={me}
         partner={partner}
