@@ -81,8 +81,23 @@ export const MoodPickerModal: React.FC<MoodPickerModalProps> = ({
       variant: 'rose' as const,
     };
 
+  // State Kho Meme / Ảnh đã lưu trong hệ thống
+  const [savedMemes, setSavedMemes] = useState<{ id: string; url: string; createdAt: string }[]>(() => {
+    try {
+      const saved = localStorage.getItem('lovespace_saved_memes');
+      const list = saved ? JSON.parse(saved) : [];
+      if (currentMood.photoUrl && !list.some((m: any) => m.url === currentMood.photoUrl)) {
+        return [{ id: 'current_photo', url: currentMood.photoUrl, createdAt: new Date().toISOString() }, ...list];
+      }
+      return list;
+    } catch {
+      return currentMood.photoUrl ? [{ id: 'current_photo', url: currentMood.photoUrl, createdAt: new Date().toISOString() }] : [];
+    }
+  });
+
+  const [isAddingLink, setIsAddingLink] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   // Lưu danh sách custom moods vào localStorage
   const handleSaveCustomMood = () => {
@@ -116,6 +131,7 @@ export const MoodPickerModal: React.FC<MoodPickerModalProps> = ({
     }
   };
 
+  // Tải ảnh từ máy và lưu luôn vào Kho Ảnh/Meme của 2 bạn
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -125,10 +141,27 @@ export const MoodPickerModal: React.FC<MoodPickerModalProps> = ({
       const url = await uploadImageToCloudinary(file);
       if (url) {
         setPhotoUrl(url);
+        const newMeme = {
+          id: `meme_${Date.now()}`,
+          url,
+          createdAt: new Date().toISOString(),
+        };
+        const updated = [newMeme, ...savedMemes.filter((m) => m.url !== url)];
+        setSavedMemes(updated);
+        localStorage.setItem('lovespace_saved_memes', JSON.stringify(updated));
       } else {
         const reader = new FileReader();
         reader.onload = (event) => {
-          setPhotoUrl(event.target?.result as string);
+          const res = event.target?.result as string;
+          setPhotoUrl(res);
+          const newMeme = {
+            id: `meme_${Date.now()}`,
+            url: res,
+            createdAt: new Date().toISOString(),
+          };
+          const updated = [newMeme, ...savedMemes.filter((m) => m.url !== res)];
+          setSavedMemes(updated);
+          localStorage.setItem('lovespace_saved_memes', JSON.stringify(updated));
         };
         reader.readAsDataURL(file);
       }
@@ -138,6 +171,31 @@ export const MoodPickerModal: React.FC<MoodPickerModalProps> = ({
       setIsUploading(false);
       e.target.value = '';
     }
+  };
+
+  // Xóa ảnh khỏi kho lưu trữ
+  const handleDeleteMeme = (memeId: string, memeUrl: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const updated = savedMemes.filter((m) => m.id !== memeId);
+    setSavedMemes(updated);
+    localStorage.setItem('lovespace_saved_memes', JSON.stringify(updated));
+    if (photoUrl === memeUrl) {
+      setPhotoUrl('');
+    }
+  };
+
+  // Dán link ảnh và lưu vào kho
+  const handleSaveLinkToLibrary = () => {
+    if (!photoUrl.trim()) return;
+    const newMeme = {
+      id: `meme_${Date.now()}`,
+      url: photoUrl.trim(),
+      createdAt: new Date().toISOString(),
+    };
+    const updated = [newMeme, ...savedMemes.filter((m) => m.url !== photoUrl.trim())];
+    setSavedMemes(updated);
+    localStorage.setItem('lovespace_saved_memes', JSON.stringify(updated));
+    setIsAddingLink(false);
   };
 
   const handleSave = () => {
@@ -155,20 +213,12 @@ export const MoodPickerModal: React.FC<MoodPickerModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Cập Nhật Trạng Thái & Cảm Xúc 💖" maxWidth="lg">
       <div className="space-y-4 pb-2">
-        {/* Hidden inputs for Camera & Device Gallery */}
+        {/* Hidden input for Device File Selector */}
         <input
           type="file"
           ref={fileInputRef}
           onChange={handleFileChange}
           accept="image/*"
-          className="hidden"
-        />
-        <input
-          type="file"
-          ref={cameraInputRef}
-          onChange={handleFileChange}
-          accept="image/*"
-          capture="environment"
           className="hidden"
         />
 
@@ -261,71 +311,137 @@ export const MoodPickerModal: React.FC<MoodPickerModalProps> = ({
           />
         </div>
 
-        {/* 3. Tải Ảnh từ máy / Chụp Ảnh / Dán Link (100% Ảnh Thực Tế, Bỏ Toàn Bộ Mẫu Cũ) */}
+        {/* 3. KHO ẢNH & MEME ĐÃ LƯU TRONG MÁY CHỦ (Thêm ảnh, Chọn ảnh, Xóa ảnh) */}
         <div>
-          <label className="block text-xs font-black text-slate-700 mb-1.5 uppercase tracking-wider">
-            3. Hình ảnh / Meme của bạn (Chụp hoặc chọn từ máy):
-          </label>
-
-          <div className="flex gap-2 mb-2">
-            <Button
-              type="button"
-              variant="romantic"
-              size="sm"
-              fullWidth
-              onClick={() => cameraInputRef.current?.click()}
-              disabled={isUploading}
-            >
-              <Camera className="w-4 h-4 mr-1.5" />
-              Chụp Ảnh Ngay 📸
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              fullWidth
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-            >
-              <ImageIcon className="w-4 h-4 mr-1.5" />
-              Chọn Từ Máy 🖼️
-            </Button>
-          </div>
-
-          <div className="relative mb-2">
-            <LinkIcon className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="url"
-              value={photoUrl}
-              onChange={(e) => setPhotoUrl(e.target.value)}
-              placeholder="Hoặc dán đường link ảnh trực tiếp (https://...)"
-              className="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-rose-400"
-            />
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-black text-slate-700 uppercase tracking-wider">
+              3. Kho Ảnh & Meme Đã Lưu ({savedMemes.length} ảnh):
+            </label>
+            <div className="flex gap-1.5">
+              <Button
+                type="button"
+                variant="romantic"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="shadow-sm"
+              >
+                <Plus className="w-3.5 h-3.5 mr-1" />
+                Thêm Ảnh Vào Kho 🖼️
+              </Button>
+            </div>
           </div>
 
           {isUploading && (
-            <div className="w-full py-6 border-2 border-dashed border-rose-300 rounded-2xl flex flex-col items-center justify-center bg-rose-50/50 my-2">
+            <div className="w-full py-5 border-2 border-dashed border-rose-300 rounded-2xl flex flex-col items-center justify-center bg-rose-50/50 my-2 animate-pulse">
               <Loader2 className="w-6 h-6 text-rose-500 animate-spin mb-1" />
-              <span className="text-xs font-bold text-rose-600">Đang tải ảnh lên đám mây...</span>
+              <span className="text-xs font-bold text-rose-600">Đang tải ảnh mới lên kho lưu trữ...</span>
+            </div>
+          )}
+
+          {/* Grid hiển thị tất cả các ảnh / meme đã lưu */}
+          {savedMemes.length === 0 ? (
+            <div className="text-center py-8 bg-slate-50/80 rounded-2xl border border-dashed border-slate-200 p-4">
+              <ImageIcon className="w-8 h-8 text-slate-300 mx-auto mb-1.5" />
+              <p className="text-xs font-bold text-slate-600 mb-1">Kho meme/ảnh hiện đang trống</p>
+              <p className="text-[11px] text-slate-400 mb-3">Bấm nút "Thêm Ảnh Vào Kho" để tải ảnh từ máy lên và lưu trữ mãi mãi.</p>
+              <Button size="sm" variant="romantic" onClick={() => fileInputRef.current?.click()}>
+                <Plus className="w-3.5 h-3.5 mr-1" />
+                Tải ảnh đầu tiên
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 max-h-52 overflow-y-auto p-1.5 bg-slate-50/60 rounded-2xl border border-slate-200">
+              {savedMemes.map((meme) => {
+                const isSelected = photoUrl === meme.url;
+                return (
+                  <div
+                    key={meme.id}
+                    onClick={() => setPhotoUrl(isSelected ? '' : meme.url)}
+                    className={`group relative rounded-xl overflow-hidden cursor-pointer border-2 transition-all aspect-square bg-white shadow-xs ${
+                      isSelected
+                        ? 'border-rose-500 ring-2 ring-rose-300 scale-102 shadow-md'
+                        : 'border-slate-200 hover:border-rose-300 hover:scale-102'
+                    }`}
+                  >
+                    <img
+                      src={meme.url}
+                      alt="Saved Meme"
+                      className="w-full h-full object-cover"
+                    />
+
+                    {/* Dấu tích chọn */}
+                    {isSelected && (
+                      <div className="absolute inset-0 bg-rose-500/20 flex items-center justify-center">
+                        <span className="p-1 rounded-full bg-rose-500 text-white shadow-md">
+                          <Check className="w-4 h-4" />
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Nút Xóa khỏi kho */}
+                    <button
+                      type="button"
+                      onClick={(e) => handleDeleteMeme(meme.id, meme.url, e)}
+                      className="absolute top-1 right-1 p-1 rounded-lg bg-black/60 text-white hover:bg-red-600 transition-colors opacity-90 sm:opacity-0 sm:group-hover:opacity-100 shadow-sm"
+                      title="Xóa khỏi kho lưu trữ"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Tùy chọn dán link URL */}
+          <div className="mt-2.5 flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setIsAddingLink(!isAddingLink)}
+              className="text-[11px] font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1"
+            >
+              <LinkIcon className="w-3 h-3" />
+              <span>{isAddingLink ? 'Ẩn ô dán link' : 'Hoặc dán URL link ảnh từ web'}</span>
+            </button>
+            {photoUrl && (
+              <button
+                type="button"
+                onClick={() => setPhotoUrl('')}
+                className="text-[11px] font-bold text-slate-400 hover:text-red-500"
+              >
+                ✕ Bỏ chọn ảnh
+              </button>
+            )}
+          </div>
+
+          {isAddingLink && (
+            <div className="flex gap-2 mt-2 animate-fade-in">
+              <input
+                type="url"
+                value={photoUrl}
+                onChange={(e) => setPhotoUrl(e.target.value)}
+                placeholder="Dán link ảnh (https://...)"
+                className="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-rose-400"
+              />
+              <Button size="sm" variant="romantic" onClick={handleSaveLinkToLibrary} disabled={!photoUrl.trim()}>
+                Lưu vào kho
+              </Button>
             </div>
           )}
 
           {/* Full preview with natural aspect ratio without cropping */}
           {photoUrl && !isUploading && (
-            <div className="relative rounded-2xl overflow-hidden border border-rose-200/80 bg-slate-900/5 mt-2">
+            <div className="relative rounded-2xl overflow-hidden border border-rose-200/80 bg-slate-900/5 mt-2.5">
+              <div className="text-[11px] font-bold text-slate-500 px-3 py-1.5 bg-rose-50/80 border-b border-rose-100 flex items-center justify-between">
+                <span>Ảnh tâm trạng đang được chọn:</span>
+                <span className="text-rose-600 font-black">✓ Đã chọn</span>
+              </div>
               <img
                 src={photoUrl}
                 alt="Preview"
                 className="w-full h-auto object-contain block"
               />
-              <button
-                type="button"
-                onClick={() => setPhotoUrl('')}
-                className="absolute top-2 right-2 px-2.5 py-1 rounded-full bg-black/60 text-white hover:bg-red-600 transition-colors text-xs font-bold shadow-md"
-                title="Bỏ ảnh"
-              >
-                ✕ Xóa ảnh
-              </button>
             </div>
           )}
         </div>
