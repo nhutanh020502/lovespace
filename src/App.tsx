@@ -807,7 +807,7 @@ export function App() {
       />
 
       {/* Main Content Area with Safe Spacing for Floating Dock */}
-      <main className="flex-1 p-3.5 sm:p-5 pb-28 max-w-2xl mx-auto w-full relative z-10">
+      <main className="flex-1 p-3.5 sm:p-5 pb-36 sm:pb-44 max-w-2xl mx-auto w-full relative z-10">
         {/* Banner Tải & Cài Đặt App Khi Đang Dùng Bản Web */}
         <PWAInstallBanner />
 

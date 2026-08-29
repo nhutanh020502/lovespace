@@ -213,7 +213,7 @@ export const MemoryGalleryView: React.FC<MemoryGalleryViewProps> = ({
   };
 
   return (
-    <div className="space-y-4 animate-fade-in">
+    <div className="space-y-4 pb-20 animate-fade-in">
       {/* Hidden File Inputs for Camera & Gallery */}
       <input
         type="file"

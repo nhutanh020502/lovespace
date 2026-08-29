@@ -267,7 +267,7 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
   };
 
   return (
-    <div className="space-y-4 animate-fade-in">
+    <div className="space-y-4 pb-20 animate-fade-in">
       {/* 1. Header Chọn Hồ Sơ & Nút Chuyển Đổi */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-3xl bg-white/80 backdrop-blur-md border border-rose-200/60 shadow-sm">
         <div className="flex items-center gap-2.5">
