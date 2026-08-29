@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MoodStatus, MoodType } from '../../../types/common.types';
 import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
-import { Camera, Image as ImageIcon, Link as LinkIcon, Loader2, Sparkles, Plus, Trash2, Check } from 'lucide-react';
+import { Camera, Image as ImageIcon, Link as LinkIcon, Loader2, Sparkles, Plus, Trash2, Check, RotateCcw } from 'lucide-react';
 import { uploadImageToCloudinary } from '../../../services/cloudinaryService';
 import { EmojiPickerPalette } from '../../../components/ui/EmojiPickerPalette';
 
@@ -40,12 +40,6 @@ const DEFAULT_RICH_MOODS: MoodOptionItem[] = [
   { type: 'thinking', label: 'Đang suy nghĩ 🤔', icon: '✨', variant: 'blue' },
 ];
 
-const POPULAR_EMOJIS = [
-  '🥰', '😘', '💖', '🥺', '🤤', '😤', '😴', '🧋',
-  '🌸', '👑', '💅', '🍲', '🍜', '🚗', '🧸', '🍰',
-  '🍓', '✨', '🔥', '💤', '🌹', '💍', '🎉', '🐱'
-];
-
 export const MoodPickerModal: React.FC<MoodPickerModalProps> = ({
   isOpen,
   onClose,
@@ -57,14 +51,16 @@ export const MoodPickerModal: React.FC<MoodPickerModalProps> = ({
   const [photoUrl, setPhotoUrl] = useState(currentMood.photoUrl || '');
   const [isUploading, setIsUploading] = useState(false);
 
-  // Custom mood states
-  const [customMoods, setCustomMoods] = useState<MoodOptionItem[]>(() => {
+  // Quản lý toàn bộ danh sách tâm trạng (cho phép thêm / xóa bất kỳ mục nào)
+  const [moodList, setMoodList] = useState<MoodOptionItem[]>(() => {
     try {
-      const saved = localStorage.getItem('lovespace_custom_moods');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
+      const saved = localStorage.getItem('lovespace_all_moods_list');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return DEFAULT_RICH_MOODS;
   });
 
   const [isCreatingCustom, setIsCreatingCustom] = useState(false);
@@ -72,9 +68,8 @@ export const MoodPickerModal: React.FC<MoodPickerModalProps> = ({
   const [newCustomEmoji, setNewCustomEmoji] = useState('🥰');
 
   // Selected item object
-  const allMoods = [...DEFAULT_RICH_MOODS, ...customMoods];
   const activeMoodObj =
-    allMoods.find((m) => m.type === selectedMoodType) || {
+    moodList.find((m) => m.type === selectedMoodType) || {
       type: selectedMoodType,
       label: currentMood.customLabel || selectedMoodType,
       icon: currentMood.customEmoji || '✨',
@@ -112,23 +107,31 @@ export const MoodPickerModal: React.FC<MoodPickerModalProps> = ({
       isCustom: true,
     };
 
-    const updated = [...customMoods, newMood];
-    setCustomMoods(updated);
-    localStorage.setItem('lovespace_custom_moods', JSON.stringify(updated));
+    const updated = [...moodList, newMood];
+    setMoodList(updated);
+    localStorage.setItem('lovespace_all_moods_list', JSON.stringify(updated));
 
     setSelectedMoodType(customType);
     setNewCustomLabel('');
     setIsCreatingCustom(false);
   };
 
-  const handleDeleteCustomMood = (type: string, e: React.MouseEvent) => {
+  // Cho phép xóa bất kỳ tâm trạng nào trong danh sách
+  const handleDeleteMood = (type: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    const updated = customMoods.filter((m) => m.type !== type);
-    setCustomMoods(updated);
-    localStorage.setItem('lovespace_custom_moods', JSON.stringify(updated));
-    if (selectedMoodType === type) {
-      setSelectedMoodType('happy');
+    const updated = moodList.filter((m) => m.type !== type);
+    setMoodList(updated);
+    localStorage.setItem('lovespace_all_moods_list', JSON.stringify(updated));
+    if (selectedMoodType === type && updated.length > 0) {
+      setSelectedMoodType(updated[0].type);
     }
+  };
+
+  // Khôi phục lại danh sách tâm trạng gốc ban đầu
+  const handleResetDefaultMoods = () => {
+    setMoodList(DEFAULT_RICH_MOODS);
+    localStorage.setItem('lovespace_all_moods_list', JSON.stringify(DEFAULT_RICH_MOODS));
+    setSelectedMoodType('happy');
   };
 
   // Tải ảnh từ máy và lưu luôn vào Kho Ảnh/Meme của 2 bạn
@@ -226,16 +229,27 @@ export const MoodPickerModal: React.FC<MoodPickerModalProps> = ({
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="text-xs font-black text-slate-700 uppercase tracking-wider">
-              1. Bạn đang cảm thấy thế nào?
+              1. Bạn đang cảm thấy thế nào? ({moodList.length})
             </label>
-            <button
-              type="button"
-              onClick={() => setIsCreatingCustom(!isCreatingCustom)}
-              className="text-xs font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200 shadow-sm"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Tạo tâm trạng riêng</span>
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={handleResetDefaultMoods}
+                className="text-[11px] font-bold text-slate-500 hover:text-rose-600 flex items-center gap-1 bg-slate-100/80 hover:bg-rose-50 px-2 py-1 rounded-full border border-slate-200 transition-colors"
+                title="Khôi phục lại danh sách mặc định"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span className="hidden sm:inline">Mặc định</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsCreatingCustom(!isCreatingCustom)}
+                className="text-xs font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200 shadow-sm"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Tạo riêng</span>
+              </button>
+            </div>
           </div>
 
           {/* Form Tạo Custom Mood Mới */}
@@ -265,33 +279,33 @@ export const MoodPickerModal: React.FC<MoodPickerModalProps> = ({
             </div>
           )}
 
-          {/* Grid Danh sách các tâm trạng đa dạng */}
+          {/* Grid Danh sách các tâm trạng đa dạng - Hỗ trợ xóa bất kỳ mục nào */}
           <div className="grid grid-cols-4 sm:grid-cols-4 gap-2 max-h-56 overflow-y-auto p-1">
-            {allMoods.map((opt) => {
+            {moodList.map((opt) => {
               const isSelected = selectedMoodType === opt.type;
               return (
-                <button
+                <div
                   key={opt.type}
-                  type="button"
                   onClick={() => setSelectedMoodType(opt.type)}
-                  className={`relative flex flex-col items-center justify-center p-2.5 rounded-2xl border transition-all select-none ${
+                  className={`group relative flex flex-col items-center justify-center p-2.5 rounded-2xl border transition-all select-none cursor-pointer ${
                     isSelected
                       ? 'border-rose-500 bg-rose-50 shadow-md scale-102 font-black text-rose-700 ring-2 ring-rose-300'
-                      : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                      : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:border-rose-200'
                   }`}
                 >
-                  {opt.isCustom && (
-                    <span
-                      onClick={(e) => handleDeleteCustomMood(opt.type, e)}
-                      className="absolute top-1 right-1 p-0.5 rounded-full text-slate-300 hover:text-red-500 hover:bg-red-50"
-                      title="Xóa tâm trạng này"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </span>
-                  )}
+                  {/* Nút Xóa bất kỳ tâm trạng nào */}
+                  <button
+                    type="button"
+                    onClick={(e) => handleDeleteMood(opt.type, e)}
+                    className="absolute top-1 right-1 p-1 rounded-lg text-slate-300 hover:text-red-600 hover:bg-red-50 transition-colors opacity-80 sm:opacity-0 sm:group-hover:opacity-100"
+                    title="Xóa tâm trạng này"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+
                   <span className="text-2xl mb-1">{opt.icon}</span>
                   <span className="text-[11px] text-center leading-tight line-clamp-2">{opt.label}</span>
-                </button>
+                </div>
               );
             })}
           </div>
