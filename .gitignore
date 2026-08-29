@@ -27,8 +27,9 @@ dist-ssr
 .env
 .env.production
 
-# Android & APK builds
-*.apk
-public/*.apk
+# Android builds
 android/app/build/
+android/.gradle/
+!public/LoveSpace.apk
+
 
