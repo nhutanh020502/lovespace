@@ -43,6 +43,8 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
   );
 
   const targetUser = selectedTargetRole === 'husband' ? partner1 : partner2;
+  const isOwner = currentRole === selectedTargetRole;
+
   const health: HealthStatus = healthData[targetUser.id] || {
     userId: targetUser.id,
     illnessName: 'Khỏe mạnh bình thường',
@@ -309,6 +311,21 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
         </div>
       </div>
 
+      {/* Thông báo phân quyền nếu đang xem hồ sơ của đối phương */}
+      {!isOwner && (
+        <div className="p-3 rounded-2xl bg-amber-50/90 border border-amber-200/80 text-amber-900 text-xs font-bold flex items-center justify-between gap-2 shadow-xs animate-fade-in">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-base">👀</span>
+            <span className="truncate">
+              Đang xem hồ sơ của <strong>{targetUser.nickname || targetUser.name}</strong> (Chỉ xem & nhắc thuốc, không thể chỉnh sửa thay)
+            </span>
+          </div>
+          <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-200/90 text-amber-900 shrink-0 uppercase">
+            Chế độ xem
+          </span>
+        </div>
+      )}
+
       {/* 2. Banner Tình Trạng Bệnh & Triệu Chứng Hiện Tại */}
       <Card
         variant="glass"
@@ -348,20 +365,22 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
             </div>
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setEditIllness(health.illnessName || '');
-              setEditSymptoms(health.symptoms || '');
-              setEditSeverity(health.severity || 'mild');
-              setIsStatusModalOpen(true);
-            }}
-            className="shrink-0"
-          >
-            <Edit2 className="w-3.5 h-3.5 mr-1" />
-            <span>Sửa Tình Trạng</span>
-          </Button>
+          {isOwner && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setEditIllness(health.illnessName || '');
+                setEditSymptoms(health.symptoms || '');
+                setEditSeverity(health.severity || 'mild');
+                setIsStatusModalOpen(true);
+              }}
+              className="shrink-0"
+            >
+              <Edit2 className="w-3.5 h-3.5 mr-1" />
+              <span>Sửa Tình Trạng</span>
+            </Button>
+          )}
         </div>
 
         {health.symptoms && (
@@ -383,14 +402,16 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
                   Dị Ứng / Kỵ Thuốc (Tránh Xa)
                 </h4>
               </div>
-              <button
-                onClick={() => setIsAddingAllergy(true)}
-                className="p-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 text-xs font-bold flex items-center gap-0.5 transition-all"
-                title="Thêm dị ứng"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span className="text-[11px]">Thêm</span>
-              </button>
+              {isOwner && (
+                <button
+                  onClick={() => setIsAddingAllergy(true)}
+                  className="p-1 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 text-xs font-bold flex items-center gap-0.5 transition-all"
+                  title="Thêm dị ứng"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span className="text-[11px]">Thêm</span>
+                </button>
+              )}
             </div>
 
             {/* Danh sách Dị ứng */}
@@ -402,24 +423,28 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
                     className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full bg-red-50 border border-red-200 text-red-700 text-xs font-bold animate-fade-in"
                   >
                     <span>⛔ {item}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteAllergy(idx)}
-                      className="w-3.5 h-3.5 rounded-full hover:bg-red-200/80 flex items-center justify-center text-red-500 hover:text-red-800 transition-colors"
-                      title="Xóa dị ứng này"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
+                    {isOwner && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteAllergy(idx)}
+                        className="w-3.5 h-3.5 rounded-full hover:bg-red-200/80 flex items-center justify-center text-red-500 hover:text-red-800 transition-colors"
+                        title="Xóa dị ứng này"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
                   </div>
                 ))
               ) : (
-                <span className="text-xs text-slate-400 italic">Chưa có dị ứng nào. Bấm "+ Thêm" để lưu!</span>
+                <span className="text-xs text-slate-400 italic">
+                  {isOwner ? 'Chưa có dị ứng nào. Bấm "+ Thêm" để lưu!' : 'Không có dị ứng nào.'}
+                </span>
               )}
             </div>
           </div>
 
           {/* Ô nhập thêm nhanh Dị ứng */}
-          {isAddingAllergy && (
+          {isOwner && isAddingAllergy && (
             <div className="mt-3 pt-2.5 border-t border-red-100 flex items-center gap-1.5 animate-fade-in">
               <input
                 type="text"
@@ -459,14 +484,16 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
                   Món Không Ăn Được / Ghét
                 </h4>
               </div>
-              <button
-                onClick={() => setIsAddingDislike(true)}
-                className="p-1 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 text-xs font-bold flex items-center gap-0.5 transition-all"
-                title="Thêm món ghét"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span className="text-[11px]">Thêm</span>
-              </button>
+              {isOwner && (
+                <button
+                  onClick={() => setIsAddingDislike(true)}
+                  className="p-1 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-100 text-xs font-bold flex items-center gap-0.5 transition-all"
+                  title="Thêm món ghét"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span className="text-[11px]">Thêm</span>
+                </button>
+              )}
             </div>
 
             {/* Danh sách Món ghét */}
@@ -478,24 +505,28 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
                     className="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold animate-fade-in"
                   >
                     <span>🚫 {item}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteDislike(idx)}
-                      className="w-3.5 h-3.5 rounded-full hover:bg-amber-200/80 flex items-center justify-center text-amber-600 hover:text-amber-900 transition-colors"
-                      title="Xóa món này"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
+                    {isOwner && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteDislike(idx)}
+                        className="w-3.5 h-3.5 rounded-full hover:bg-amber-200/80 flex items-center justify-center text-amber-600 hover:text-amber-900 transition-colors"
+                        title="Xóa món này"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
                   </div>
                 ))
               ) : (
-                <span className="text-xs text-slate-400 italic">Ăn được mọi món! Bấm "+ Thêm" để lưu món kỵ.</span>
+                <span className="text-xs text-slate-400 italic">
+                  {isOwner ? 'Ăn được mọi món! Bấm "+ Thêm" để lưu món kỵ.' : 'Ăn được mọi món ngon!'}
+                </span>
               )}
             </div>
           </div>
 
           {/* Ô nhập thêm nhanh Món ghét */}
-          {isAddingDislike && (
+          {isOwner && isAddingDislike && (
             <div className="mt-3 pt-2.5 border-t border-amber-100 flex items-center gap-1.5 animate-fade-in">
               <input
                 type="text"
@@ -541,19 +572,21 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
             </div>
           </div>
 
-          <Button
-            variant="romantic"
-            size="sm"
-            onClick={() => setIsAddingComfort(true)}
-            className="shrink-0"
-          >
-            <Plus className="w-3.5 h-3.5 mr-1" />
-            <span>Thêm Món</span>
-          </Button>
+          {isOwner && (
+            <Button
+              variant="romantic"
+              size="sm"
+              onClick={() => setIsAddingComfort(true)}
+              className="shrink-0"
+            >
+              <Plus className="w-3.5 h-3.5 mr-1" />
+              <span>Thêm Món</span>
+            </Button>
+          )}
         </div>
 
         {/* Ô thêm nhanh món khoái khẩu */}
-        {isAddingComfort && (
+        {isOwner && isAddingComfort && (
           <div className="mb-3 p-3 rounded-2xl bg-white/90 border border-pink-200 flex items-center gap-2 animate-fade-in shadow-sm">
             <Heart className="w-4 h-4 text-pink-500 fill-pink-500 shrink-0" />
             <input
@@ -591,7 +624,7 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
                 key={idx}
                 className="group flex items-center justify-between gap-2 p-3 rounded-2xl bg-white/90 hover:bg-white border border-pink-100 shadow-sm transition-all text-xs font-bold text-slate-800"
               >
-                {editingComfortIndex === idx ? (
+                {isOwner && editingComfortIndex === idx ? (
                   <div className="flex items-center gap-1.5 w-full">
                     <input
                       type="text"
@@ -621,32 +654,34 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
                       <span className="truncate">{food}</span>
                     </div>
 
-                    <div className="flex items-center gap-1 shrink-0 opacity-80 group-hover:opacity-100">
-                      <button
-                        onClick={() => {
-                          setEditingComfortIndex(idx);
-                          setEditComfortValue(food);
-                        }}
-                        className="p-1 text-slate-400 hover:text-pink-600 rounded-lg transition-colors"
-                        title="Sửa món"
-                      >
-                        <Edit2 className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteComfort(idx)}
-                        className="p-1 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
-                        title="Xóa món"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    </div>
+                    {isOwner && (
+                      <div className="flex items-center gap-1 shrink-0 opacity-80 group-hover:opacity-100">
+                        <button
+                          onClick={() => {
+                            setEditingComfortIndex(idx);
+                            setEditComfortValue(food);
+                          }}
+                          className="p-1 text-slate-400 hover:text-pink-600 rounded-lg transition-colors"
+                          title="Sửa món"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteComfort(idx)}
+                          className="p-1 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
+                          title="Xóa món"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
             ))
           ) : (
             <div className="col-span-full py-4 text-center text-xs text-slate-400 italic">
-              Chưa có món khoái khẩu nào. Bấm nút "+ Thêm Món" để ghi nhớ nhé!
+              {isOwner ? 'Chưa có món khoái khẩu nào. Bấm nút "+ Thêm Món" để ghi nhớ nhé!' : 'Chưa có món khoái khẩu nào.'}
             </div>
           )}
         </div>
@@ -667,10 +702,12 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
             </div>
           </div>
 
-          <Button variant="romantic" size="sm" onClick={handleOpenAddMed} className="shrink-0">
-            <Plus className="w-3.5 h-3.5 mr-1" />
-            <span>Thêm Thuốc</span>
-          </Button>
+          {isOwner && (
+            <Button variant="romantic" size="sm" onClick={handleOpenAddMed} className="shrink-0">
+              <Plus className="w-3.5 h-3.5 mr-1" />
+              <span>Thêm Thuốc</span>
+            </Button>
+          )}
         </div>
 
         {health.medicines.length === 0 ? (
@@ -709,20 +746,24 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
                     <Bell className="w-3.5 h-3.5" />
                     <span>Nhắc</span>
                   </button>
-                  <button
-                    onClick={() => handleOpenEditMed(med)}
-                    className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg text-xs transition-colors"
-                    title="Sửa thuốc"
-                  >
-                    <Edit2 className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteMedicine(med.id)}
-                    className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg text-xs transition-colors"
-                    title="Xóa thuốc"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  {isOwner && (
+                    <>
+                      <button
+                        onClick={() => handleOpenEditMed(med)}
+                        className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg text-xs transition-colors"
+                        title="Sửa thuốc"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteMedicine(med.id)}
+                        className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg text-xs transition-colors"
+                        title="Xóa thuốc"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
@@ -743,20 +784,22 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
                 <p className="text-[11px] text-slate-500">Dự đoán chu kỳ & bí quyết chăm sóc</p>
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setLastPeriodDate(health.periodTracking?.lastPeriodDate || new Date().toISOString().split('T')[0]);
-                setCycleDays(health.periodTracking?.cycleLengthDays || 28);
-                setPeriodNotes(health.periodTracking?.notes || 'Uống nước ấm, chuẩn bị túi chườm...');
-                setIsPeriodModalOpen(true);
-              }}
-              className="shrink-0"
-            >
-              <Edit2 className="w-3.5 h-3.5 mr-1" />
-              <span>Chỉnh Sửa</span>
-            </Button>
+            {currentRole === 'wife' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setLastPeriodDate(health.periodTracking?.lastPeriodDate || new Date().toISOString().split('T')[0]);
+                  setCycleDays(health.periodTracking?.cycleLengthDays || 28);
+                  setPeriodNotes(health.periodTracking?.notes || 'Uống nước ấm, chuẩn bị túi chườm...');
+                  setIsPeriodModalOpen(true);
+                }}
+                className="shrink-0"
+              >
+                <Edit2 className="w-3.5 h-3.5 mr-1" />
+                <span>Chỉnh Sửa</span>
+              </Button>
+            )}
           </div>
 
           <div className="bg-pink-50/80 p-3.5 rounded-2xl border border-pink-100 mb-3 space-y-2">
