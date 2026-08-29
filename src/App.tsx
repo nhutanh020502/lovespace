@@ -10,6 +10,7 @@ import { HealthCareView } from './features/health-care/components/HealthCareView
 import { ChatView } from './features/chat/components/ChatView';
 import { PlacesView } from './features/places-food/components/PlacesView';
 import { MemoryGalleryView } from './features/gallery/components/MemoryGalleryView';
+import { AuthAndPairingView } from './features/auth/components/AuthAndPairingView';
 import {
   INITIAL_SETTINGS,
   INITIAL_MOODS,
@@ -57,8 +58,19 @@ import {
 } from './services/supabaseSync';
 import { initOneSignal, setOneSignalUserRole, showSystemNotification } from './services/notificationService';
 
+export interface AuthSession {
+  phone: string;
+  name: string;
+  role: UserRole;
+  coupleId: string;
+  partnerName: string;
+  partnerPhone?: string;
+  anniversaryDate?: string;
+}
+
 export function App() {
   // Global State stored in LocalStorage (Local-First)
+  const [authSession, setAuthSession] = useLocalStorage<AuthSession | null>('lovespace_auth_session', null);
   const [settings, setSettings] = useLocalStorage('lovespace_settings', INITIAL_SETTINGS);
   const [moods, setMoods] = useLocalStorage('lovespace_moods', INITIAL_MOODS);
   const [healthData, setHealthData] = useLocalStorage('lovespace_health', INITIAL_HEALTH);
@@ -698,6 +710,33 @@ export function App() {
     deleteMemorySync(memId);
   };
 
+  // Nếu chưa đăng nhập / chưa ghép đôi SĐT -> hiển thị màn hình Auth & Ghép Đôi
+  if (!authSession) {
+    return (
+      <AuthAndPairingView
+        onAuthSuccess={(session) => {
+          setAuthSession(session);
+          setSettings((prev) => ({
+            ...prev,
+            currentActiveUser: session.role,
+            anniversaryDate: session.anniversaryDate || prev.anniversaryDate,
+            partner1: {
+              ...prev.partner1,
+              name: session.role === 'husband' ? session.name : session.partnerName,
+              nickname: session.role === 'husband' ? session.name : session.partnerName,
+            },
+            partner2: {
+              ...prev.partner2,
+              name: session.role === 'wife' ? session.name : session.partnerName,
+              nickname: session.role === 'wife' ? session.name : session.partnerName,
+            },
+          }));
+          showToast(`Chào mừng ${session.name} đến với Không Gian Yêu! 💕`);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-orange-50 text-slate-800 flex flex-col font-sans selection:bg-rose-200">
       {/* Toast Popup Notification */}
@@ -725,6 +764,11 @@ export function App() {
         onSaveSettings={(newSettings) => {
           setSettings(newSettings);
           showToast('Đã lưu tùy chỉnh thành công! ✨');
+        }}
+        onLogout={() => {
+          setAuthSession(null);
+          setIsSettingsOpen(false);
+          showToast('Đã đăng xuất khỏi không gian yêu.');
         }}
       />
 

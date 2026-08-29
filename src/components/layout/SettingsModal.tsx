@@ -12,6 +12,7 @@ interface SettingsModalProps {
   onClose: () => void;
   settings: CoupleSettings;
   onSaveSettings: (newSettings: CoupleSettings) => void;
+  onLogout?: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -19,6 +20,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClose,
   settings,
   onSaveSettings,
+  onLogout,
 }) => {
   const [partner1Nick, setPartner1Nick] = useState(settings.partner1.nickname);
   const [partner1Avatar, setPartner1Avatar] = useState(settings.partner1.avatar);
@@ -228,6 +230,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             Thử ngay
           </button>
         </div>
+
+        {/* 5. Đăng xuất / Đổi tài khoản */}
+        {onLogout && (
+          <div className="pt-2 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={onLogout}
+              className="w-full py-2 px-3 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+            >
+              <span>Đăng Xuất / Đổi Tài Khoản Khác</span>
+            </button>
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex gap-2 pt-2 border-t">

@@ -474,3 +474,144 @@ export function broadcastCoupleAction(payload: Omit<CoupleBroadcastPayload, 'tim
     console.warn('Failed to broadcast couple action:', err);
   }
 }
+
+// ==============================================================================
+// 8. COUPLE PAIRING & PHONE AUTH MANAGEMENT (1-to-1)
+// ==============================================================================
+export interface CoupleRecord {
+  id: string;
+  invite_code: string;
+  partner1_phone: string;
+  partner1_name: string;
+  partner1_role: 'husband' | 'wife';
+  partner2_phone?: string;
+  partner2_name?: string;
+  partner2_role?: 'husband' | 'wife';
+  anniversary_date?: string;
+  status: 'pending' | 'active';
+  created_at: string;
+}
+
+export async function findCoupleByPhone(phone: string): Promise<CoupleRecord | null> {
+  if (!isSupabaseConfigured || !supabase) return null;
+  try {
+    const cleanPhone = phone.trim();
+    const { data, error } = await supabase
+      .from('couples')
+      .select('*')
+      .or(`partner1_phone.eq.${cleanPhone},partner2_phone.eq.${cleanPhone}`)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return data as CoupleRecord;
+  } catch {
+    return null;
+  }
+}
+
+export async function findCoupleByInviteCode(code: string): Promise<CoupleRecord | null> {
+  if (!isSupabaseConfigured || !supabase) return null;
+  try {
+    const cleanCode = code.trim().toUpperCase();
+    const { data, error } = await supabase
+      .from('couples')
+      .select('*')
+      .eq('invite_code', cleanCode)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return data as CoupleRecord;
+  } catch {
+    return null;
+  }
+}
+
+export async function createCoupleSpace(
+  phone: string,
+  name: string,
+  role: 'husband' | 'wife',
+  anniversaryDate: string = '2023-02-14'
+): Promise<CoupleRecord | null> {
+  if (!isSupabaseConfigured || !supabase) return null;
+  try {
+    const randomCode = 'LOVE' + Math.floor(1000 + Math.random() * 9000);
+    const newRecord = {
+      invite_code: randomCode,
+      partner1_phone: phone.trim(),
+      partner1_name: name.trim(),
+      partner1_role: role,
+      partner2_phone: null,
+      partner2_name: null,
+      partner2_role: role === 'husband' ? 'wife' : 'husband',
+      anniversary_date: anniversaryDate,
+      status: 'pending',
+    };
+
+    const { data, error } = await supabase
+      .from('couples')
+      .insert(newRecord)
+      .select()
+      .single();
+
+    if (error || !data) {
+      console.error('createCoupleSpace error:', error);
+      return null;
+    }
+    return data as CoupleRecord;
+  } catch (err) {
+    console.error('Failed to create couple space:', err);
+    return null;
+  }
+}
+
+export async function joinCoupleSpace(
+  inviteCode: string,
+  phone: string,
+  name: string
+): Promise<{ success: boolean; couple?: CoupleRecord; message?: string }> {
+  if (!isSupabaseConfigured || !supabase) {
+    return { success: false, message: 'Chưa kết nối Supabase' };
+  }
+  try {
+    const cleanCode = inviteCode.trim().toUpperCase();
+    const couple = await findCoupleByInviteCode(cleanCode);
+
+    if (!couple) {
+      return { success: false, message: 'Mã ghép đôi không tồn tại. Vui lòng kiểm tra lại!' };
+    }
+
+    if (couple.status === 'active' && couple.partner2_phone) {
+      if (couple.partner2_phone === phone.trim() || couple.partner1_phone === phone.trim()) {
+        return { success: true, couple };
+      }
+      return { success: false, message: 'Không gian yêu này đã có đủ 2 người rồi!' };
+    }
+
+    if (couple.partner1_phone === phone.trim()) {
+      return { success: true, couple };
+    }
+
+    const targetRole = couple.partner1_role === 'husband' ? 'wife' : 'husband';
+    const { data, error } = await supabase
+      .from('couples')
+      .update({
+        partner2_phone: phone.trim(),
+        partner2_name: name.trim(),
+        partner2_role: targetRole,
+        status: 'active',
+      })
+      .eq('id', couple.id)
+      .select()
+      .single();
+
+    if (error || !data) {
+      return { success: false, message: 'Lỗi khi ghép đôi. Vui lòng thử lại!' };
+    }
+
+    return { success: true, couple: data as CoupleRecord };
+  } catch (err: any) {
+    return { success: false, message: err?.message || 'Lỗi không xác định' };
+  }
+}
