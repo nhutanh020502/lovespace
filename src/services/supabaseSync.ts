@@ -604,12 +604,55 @@ export interface CoupleRecord {
   partner1_phone: string;
   partner1_name: string;
   partner1_role: 'husband' | 'wife';
+  partner1_avatar?: string;
   partner2_phone?: string;
   partner2_name?: string;
   partner2_role?: 'husband' | 'wife';
+  partner2_avatar?: string;
   anniversary_date?: string;
+  settings?: any;
   status: 'pending' | 'active';
   created_at: string;
+}
+
+export async function fetchCoupleById(coupleId: string): Promise<CoupleRecord | null> {
+  if (!isSupabaseConfigured || !supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from('couples')
+      .select('*')
+      .eq('id', coupleId)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return data as CoupleRecord;
+  } catch {
+    return null;
+  }
+}
+
+export async function updateCoupleSettings(
+  coupleId: string,
+  payload: Partial<CoupleRecord>
+): Promise<CoupleRecord | null> {
+  if (!isSupabaseConfigured || !supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from('couples')
+      .update(payload)
+      .eq('id', coupleId)
+      .select()
+      .single();
+
+    if (error || !data) {
+      console.warn('Lỗi khi cập nhật cài đặt couple trên Supabase:', error);
+      return null;
+    }
+    return data as CoupleRecord;
+  } catch (err) {
+    console.warn('Lỗi updateCoupleSettings:', err);
+    return null;
+  }
 }
 
 export async function findCoupleByPhone(phone: string): Promise<CoupleRecord | null> {

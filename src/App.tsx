@@ -64,6 +64,8 @@ import {
   insertPlan,
   updatePlan,
   deletePlan as deletePlanSync,
+  fetchCoupleById,
+  updateCoupleSettings,
   broadcastCoupleAction,
   setActiveRealtimeChannel,
 } from './services/supabaseSync';
@@ -77,6 +79,8 @@ export interface AuthSession {
   partnerName: string;
   partnerPhone?: string;
   anniversaryDate?: string;
+  partner1Avatar?: string;
+  partner2Avatar?: string;
 }
 
 export function App() {
@@ -123,7 +127,7 @@ export function App() {
 
     const loadCloudData = async () => {
       try {
-        const [cloudMoods, cloudHealth, cloudMsgs, cloudPlaces, cloudTodos, cloudMems, cloudPlans] = await Promise.all([
+        const [cloudMoods, cloudHealth, cloudMsgs, cloudPlaces, cloudTodos, cloudMems, cloudPlans, cloudCouple] = await Promise.all([
           fetchMoodStatuses(),
           fetchHealthStatuses(),
           fetchChatMessages(),
@@ -131,6 +135,7 @@ export function App() {
           fetchTodos(),
           fetchMemories(),
           fetchPlans(),
+          authSession?.coupleId ? fetchCoupleById(authSession.coupleId) : Promise.resolve(null),
         ]);
 
         if (cloudMoods) setMoods(cloudMoods);
@@ -140,6 +145,25 @@ export function App() {
         if (cloudTodos && cloudTodos.length > 0) setTodos(cloudTodos);
         if (cloudMems && cloudMems.length > 0) setMemories(cloudMems);
         if (cloudPlans && cloudPlans.length > 0) setPlans(cloudPlans);
+
+        if (cloudCouple) {
+          setSettings((prev) => ({
+            ...prev,
+            anniversaryDate: cloudCouple.anniversary_date || prev.anniversaryDate,
+            partner1: {
+              ...prev.partner1,
+              name: cloudCouple.partner1_name || prev.partner1.name,
+              nickname: cloudCouple.partner1_name || prev.partner1.nickname,
+              avatar: cloudCouple.partner1_avatar || prev.partner1.avatar,
+            },
+            partner2: {
+              ...prev.partner2,
+              name: cloudCouple.partner2_name || prev.partner2.name,
+              nickname: cloudCouple.partner2_name || prev.partner2.nickname,
+              avatar: cloudCouple.partner2_avatar || prev.partner2.avatar,
+            },
+          }));
+        }
       } catch (err) {
         console.warn('Lỗi khi tải dữ liệu từ Supabase:', err);
       }
@@ -497,13 +521,39 @@ export function App() {
           }
         }
       )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'couples' },
+        (payload: any) => {
+          if (payload.new && authSession && payload.new.id === authSession.coupleId) {
+            const cp = payload.new;
+            setSettings((prev) => ({
+              ...prev,
+              anniversaryDate: cp.anniversary_date || prev.anniversaryDate,
+              partner1: {
+                ...prev.partner1,
+                name: cp.partner1_name || prev.partner1.name,
+                nickname: cp.partner1_name || prev.partner1.nickname,
+                avatar: cp.partner1_avatar || prev.partner1.avatar,
+              },
+              partner2: {
+                ...prev.partner2,
+                name: cp.partner2_name || prev.partner2.name,
+                nickname: cp.partner2_name || prev.partner2.nickname,
+                avatar: cp.partner2_avatar || prev.partner2.avatar,
+              },
+            }));
+            showToast('Cài đặt & ngày yêu vừa được cập nhật từ đối phương! 💕');
+          }
+        }
+      )
       .subscribe();
 
     return () => {
       supabase?.removeChannel(channel);
       setActiveRealtimeChannel(null);
     };
-  }, [settings.currentActiveUser]);
+  }, [settings.currentActiveUser, authSession?.coupleId]);
 
   // Đổi vai người dùng (Chồng <-> Vợ)
   const handleSwitchRole = (newRole: UserRole) => {
@@ -858,11 +908,13 @@ export function App() {
               ...prev.partner1,
               name: session.role === 'husband' ? session.name : session.partnerName,
               nickname: session.role === 'husband' ? session.name : session.partnerName,
+              avatar: (session.role === 'husband' ? session.partner1Avatar : session.partner2Avatar) || prev.partner1.avatar,
             },
             partner2: {
               ...prev.partner2,
               name: session.role === 'wife' ? session.name : session.partnerName,
               nickname: session.role === 'wife' ? session.name : session.partnerName,
+              avatar: (session.role === 'wife' ? session.partner2Avatar : session.partner1Avatar) || prev.partner2.avatar,
             },
           }));
           showToast(`Chào mừng ${session.name} đến với Không Gian Yêu! 💕`);
@@ -903,6 +955,30 @@ export function App() {
         settings={settings}
         onSaveSettings={(newSettings) => {
           setSettings(newSettings);
+          if (authSession) {
+            setAuthSession((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    anniversaryDate: newSettings.anniversaryDate,
+                    name: prev.role === 'husband' ? newSettings.partner1.nickname : newSettings.partner2.nickname,
+                    partnerName: prev.role === 'husband' ? newSettings.partner2.nickname : newSettings.partner1.nickname,
+                    partner1Avatar: newSettings.partner1.avatar,
+                    partner2Avatar: newSettings.partner2.avatar,
+                  }
+                : null
+            );
+
+            if (authSession.coupleId) {
+              updateCoupleSettings(authSession.coupleId, {
+                anniversary_date: newSettings.anniversaryDate,
+                partner1_name: newSettings.partner1.nickname,
+                partner1_avatar: newSettings.partner1.avatar,
+                partner2_name: newSettings.partner2.nickname,
+                partner2_avatar: newSettings.partner2.avatar,
+              });
+            }
+          }
           showToast('Đã lưu tùy chỉnh thành công! ✨');
         }}
         onLogout={() => {

@@ -20,6 +20,8 @@ interface AuthAndPairingViewProps {
     partnerName: string;
     partnerPhone?: string;
     anniversaryDate?: string;
+    partner1Avatar?: string;
+    partner2Avatar?: string;
   }) => void;
 }
 
@@ -76,6 +78,8 @@ export const AuthAndPairingView: React.FC<AuthAndPairingViewProps> = ({ onAuthSu
           partnerName,
           partnerPhone,
           anniversaryDate: couple.anniversary_date,
+          partner1Avatar: couple.partner1_avatar,
+          partner2Avatar: couple.partner2_avatar,
         });
       } else {
         // SĐT MỚI -> Chuyển sang chọn Tạo phòng hoặc Nhập mã
@@ -121,6 +125,8 @@ export const AuthAndPairingView: React.FC<AuthAndPairingViewProps> = ({ onAuthSu
           partnerName,
           partnerPhone: isPartner1 ? existing.partner2_phone : existing.partner1_phone,
           anniversaryDate: existing.anniversary_date,
+          partner1Avatar: existing.partner1_avatar,
+          partner2Avatar: existing.partner2_avatar,
         });
         return;
       }
@@ -143,16 +149,18 @@ export const AuthAndPairingView: React.FC<AuthAndPairingViewProps> = ({ onAuthSu
   // 3. Tham gia phòng bằng mã mời
   const handleJoinSpace = async () => {
     const cleanPhone = phone.trim();
+    const cleanCode = inviteCodeInput.trim().toUpperCase();
+
     if (!cleanPhone || cleanPhone.length < 9) {
-      setErrorMessage('Vui lòng nhập số điện thoại của bạn!');
+      setErrorMessage('Vui lòng nhập số điện thoại hợp lệ!');
       return;
     }
     if (!name.trim()) {
-      setErrorMessage('Vui lòng nhập tên / biệt danh của bạn!');
+      setErrorMessage('Vui lòng nhập tên của bạn!');
       return;
     }
-    if (!inviteCodeInput.trim()) {
-      setErrorMessage('Vui lòng nhập mã ghép đôi do người yêu gửi!');
+    if (!cleanCode) {
+      setErrorMessage('Vui lòng nhập mã ghép đôi!');
       return;
     }
 
@@ -160,13 +168,14 @@ export const AuthAndPairingView: React.FC<AuthAndPairingViewProps> = ({ onAuthSu
     setErrorMessage(null);
 
     try {
-      const res = await joinCoupleSpace(inviteCodeInput.trim(), cleanPhone, name.trim());
+      const res = await joinCoupleSpace(cleanCode, cleanPhone, name.trim());
       if (res.success && res.couple) {
-        triggerCelebration();
         const couple = res.couple;
         const isPartner1 = couple.partner1_phone === cleanPhone;
         const userRole = isPartner1 ? couple.partner1_role : (couple.partner2_role || 'wife');
         const partnerName = isPartner1 ? (couple.partner2_name || 'Người Yêu') : couple.partner1_name;
+
+        triggerCelebration();
 
         onAuthSuccess({
           phone: cleanPhone,
@@ -176,6 +185,8 @@ export const AuthAndPairingView: React.FC<AuthAndPairingViewProps> = ({ onAuthSu
           partnerName,
           partnerPhone: isPartner1 ? couple.partner2_phone : couple.partner1_phone,
           anniversaryDate: couple.anniversary_date,
+          partner1Avatar: couple.partner1_avatar,
+          partner2Avatar: couple.partner2_avatar,
         });
       } else {
         setErrorMessage(res.message || 'Mã ghép đôi không chính xác hoặc đã đủ 2 người!');
@@ -213,6 +224,8 @@ export const AuthAndPairingView: React.FC<AuthAndPairingViewProps> = ({ onAuthSu
               partnerName: updated.partner2_name || 'Người Yêu',
               partnerPhone: updated.partner2_phone,
               anniversaryDate: updated.anniversary_date,
+              partner1Avatar: updated.partner1_avatar,
+              partner2Avatar: updated.partner2_avatar,
             });
           }
         }
