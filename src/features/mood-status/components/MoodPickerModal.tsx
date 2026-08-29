@@ -153,7 +153,7 @@ export const MoodPickerModal: React.FC<MoodPickerModalProps> = ({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Cập Nhật Trạng Thái & Cảm Xúc 💖" maxWidth="lg">
-      <div className="space-y-4 max-h-[80vh] overflow-y-auto pr-1">
+      <div className="space-y-4 pb-2">
         {/* Hidden inputs for Camera & Device Gallery */}
         <input
           type="file"
@@ -339,8 +339,8 @@ export const MoodPickerModal: React.FC<MoodPickerModalProps> = ({
           )}
         </div>
 
-        {/* Nút lưu */}
-        <div className="flex gap-2 pt-2 border-t border-slate-100">
+        {/* Nút lưu sticky rõ ràng */}
+        <div className="flex gap-2 pt-3 border-t border-slate-100 sticky bottom-0 bg-white/95 backdrop-blur-md -mx-4 -mb-4 p-4 sm:-mx-5 sm:-mb-5 sm:p-5">
           <Button variant="secondary" fullWidth onClick={onClose}>
             Hủy
           </Button>

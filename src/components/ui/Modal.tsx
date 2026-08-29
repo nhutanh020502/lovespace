@@ -15,7 +15,7 @@ export const Modal: React.FC<ModalProps> = ({
   onClose,
   title,
   children,
-  maxWidth = 'md'
+  maxWidth = 'md',
 }) => {
   useEffect(() => {
     if (isOpen) {
@@ -38,39 +38,44 @@ export const Modal: React.FC<ModalProps> = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 pb-12 sm:pb-6 overflow-hidden">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-md"
           />
 
-          {/* Modal Card */}
+          {/* Modal Dialog Card */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.94, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className={`relative w-full ${maxWClasses[maxWidth]} max-h-[90vh] flex flex-col bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-rose-100 overflow-hidden z-10`}
+            exit={{ opacity: 0, scale: 0.94, y: 16 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+            className={`relative w-full ${maxWClasses[maxWidth]} max-h-[calc(100dvh-56px)] sm:max-h-[88vh] flex flex-col bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-rose-200/80 overflow-hidden z-10`}
           >
-            {/* Header */}
+            {/* Sticky Header */}
             {title && (
-              <div className="flex items-center justify-between px-5 py-4 border-b border-rose-100/60">
-                <h3 className="text-lg font-bold text-slate-800">{title}</h3>
+              <div className="flex items-center justify-between px-4 sm:px-5 py-3.5 border-b border-rose-100/80 bg-white/80 backdrop-blur-md shrink-0">
+                <h3 className="text-base sm:text-lg font-black text-slate-800 tracking-tight truncate pr-2">
+                  {title}
+                </h3>
                 <button
                   onClick={onClose}
-                  className="p-1.5 text-slate-400 hover:text-slate-600 rounded-full hover:bg-rose-50 transition-colors"
+                  className="p-1.5 text-slate-400 hover:text-slate-700 rounded-full hover:bg-rose-50 transition-colors shrink-0"
+                  title="Đóng modal"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
             )}
 
-            {/* Content */}
-            <div className="p-5 overflow-y-auto flex-1">{children}</div>
+            {/* Scrollable Content Body */}
+            <div className="p-4 sm:p-5 overflow-y-auto flex-1 overscroll-contain">
+              {children}
+            </div>
           </motion.div>
         </div>
       )}

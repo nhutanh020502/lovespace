@@ -400,7 +400,7 @@ export const PlacesView: React.FC<PlacesViewProps> = ({
             />
           </div>
 
-          <div className="flex gap-2 pt-2 border-t">
+          <div className="flex gap-2 pt-3 border-t border-slate-100 sticky bottom-0 bg-white/95 backdrop-blur-md -mx-4 -mb-4 p-4 sm:-mx-5 sm:-mb-5 sm:p-5">
             <Button variant="secondary" fullWidth onClick={() => setIsModalOpen(false)}>
               Hủy
             </Button>
