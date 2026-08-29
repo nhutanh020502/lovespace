@@ -30,7 +30,7 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['Quicksand', 'Nunito', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'Quicksand', 'Nunito', 'sans-serif'],
       },
       boxShadow: {
         'glass': '0 8px 32px 0 rgba(244, 63, 94, 0.12)',

@@ -807,8 +807,19 @@ export function App() {
             partner2={settings.partner2}
             healthData={healthData}
             onUpdateHealth={(userId, updated) => {
+              const prevHealth: HealthStatus = healthData[userId] || {
+                userId,
+                illnessName: 'Khỏe mạnh bình thường',
+                symptoms: '',
+                severity: 'mild',
+                medicines: [],
+                allergies: [],
+                dislikedFoods: [],
+                favoriteComfortFoods: [],
+                lastUpdated: new Date().toISOString(),
+              };
               const updatedHealth: HealthStatus = {
-                ...healthData[userId],
+                ...prevHealth,
                 ...updated,
                 userId,
                 lastUpdated: new Date().toISOString(),
@@ -817,7 +828,8 @@ export function App() {
                 ...prev,
                 [userId]: updatedHealth,
               }));
-              showToast('Đã lưu thông tin sức khỏe!');
+              audio.playPop();
+              showToast('Đã lưu hồ sơ sức khỏe thành công! ✨');
               upsertHealthStatus(userId, updatedHealth);
             }}
             onRemindMedicine={handleRemindMedicine}
