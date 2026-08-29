@@ -97,3 +97,12 @@
 - **📁 Kho Lưu Trữ Kỷ Niệm & Nhân Bản (History Archive & Clone):** Lưu lại mọi lịch trình đã đi trong quá khứ; 1-click **"Nhân bản kế hoạch"** để đi lại chuyến đi yêu thích vào ngày mới.
 - **🔄 Đồng Bộ Supabase Realtime & Push Notification:** Tự động tạo bảng `dating_plans` trên Supabase và đồng bộ 2 chiều tức thì giữa 2 người.
 - **📱 Cập nhật file cài đặt Android `LoveSpace.apk` và deploy lên Vercel.**
+
+### 📅 [2026-08-30] - [CRITICAL FIX] Sửa Triệt Để Lỗi Reset Ngày Yêu & Cài Đặt Không Gian Yêu (Cloud Persistence 2 Chiều)
+- **Nguyên nhân gốc rễ (Root Cause):** Trước đây khi đổi ngày yêu (`anniversaryDate`), biệt danh hay avatar trong `SettingsModal`, app chỉ mới lưu vào state local `settings` mà chưa cập nhật đồng thời lên bảng `couples` trên Supabase và `authSession`. Khi người dùng reload trang hoặc partner đăng nhập từ máy khác, app tự lấy ngày mặc định `2023-02-14` từ bản ghi couple cũ ghi đè lại.
+- **Giải pháp xử lý:**
+  1. Chạy migration bổ sung cột `partner1_avatar`, `partner2_avatar`, `settings` trên bảng `couples` của Supabase Database.
+  2. Thêm hàm `updateCoupleSettings()` và `fetchCoupleById()` trong `supabaseSync.ts`.
+  3. Tích hợp đồng bộ 2 chiều: Khi đổi ngày yêu, biệt danh, avatar trong Settings -> Tự động cập nhật `authSession` và cập nhật trực tiếp lên Supabase.
+  4. Lắng nghe `postgres_changes` trên bảng `couples` trong Supabase Realtime để khi 1 người đổi ngày yêu/ảnh đại diện thì máy người kia lập tức cập nhật theo thời gian thực.
+  5. Khi khởi động app, `loadCloudData()` tự động tải ngày yêu mới nhất từ Cloud, bảo đảm **KHÔNG BAO GIỜ BỊ RESET** về mặc định nữa!
