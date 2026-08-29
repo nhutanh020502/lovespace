@@ -115,3 +115,8 @@
   - Phản hồi bên dưới hiển thị rõ ràng nội dung câu trả lời.
   - Đồng bộ 2 chiều qua Supabase Realtime WebSocket với cột `reply_to_mood JSONB`.
 
+### 📅 [2026-08-30] - [FIX] Tải File `LoveSpace.apk` Trực Tiếp Thay Vì `index.html`
+- **Nguyên nhân gốc rễ:** Do trước đó file APK cũ bị lồng đệ quy lên tới >100MB và bị `.gitignore` chặn đẩy lên git, dẫn đến Vercel không có file `.apk` và rewrite trả về file `index.html`.
+- **Giải pháp:** Tối ưu hóa bộ build APK Android thành file cài đặt siêu nhẹ (chỉ **4.6MB**), đã ký sẵn chứng chỉ debug và đẩy trực tiếp lên thư mục `public/LoveSpace.apk` trên Vercel. Bây giờ bấm nút "Tải File APK" sẽ tải ngay file APK thật 100%.
+
+
