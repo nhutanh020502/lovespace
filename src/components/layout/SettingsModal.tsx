@@ -231,6 +231,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           </button>
         </div>
 
+        {/* 4. Tải file APK Android */}
+        <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-emerald-500 text-white">
+              <Smartphone className="w-4 h-4" />
+            </div>
+            <div>
+              <span className="text-xs font-bold text-slate-800">App Android (.APK)</span>
+              <p className="text-[10px] text-slate-500">Tải file cài đặt trực tiếp vào điện thoại</p>
+            </div>
+          </div>
+          <a
+            href="/LoveSpace.apk"
+            download="LoveSpace.apk"
+            className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold shadow-sm active:scale-95 transition-all"
+          >
+            Tải APK
+          </a>
+        </div>
+
         {/* 5. Đăng xuất / Đổi tài khoản */}
         {onLogout && (
           <div className="pt-2 border-t border-slate-100">

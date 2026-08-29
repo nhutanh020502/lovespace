@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { usePWAInstall } from '../../hooks/usePWAInstall';
-import { Download, Smartphone, X, Share, PlusSquare, Sparkles } from 'lucide-react';
+import { Download, Smartphone, X, Share, PlusSquare, Sparkles, Package } from 'lucide-react';
 import { Modal } from './Modal';
 import { Button } from './Button';
 
@@ -9,23 +9,23 @@ export const PWAInstallBanner: React.FC = () => {
   const [isDismissed, setIsDismissed] = useState(false);
   const [isIOSModalOpen, setIsIOSModalOpen] = useState(false);
 
-  // Nếu app đã được cài đặt (đang chạy toàn màn hình độc lập) hoặc user đã bấm tắt banner -> không hiện banner
+  // Nếu app đã được cài đặt và đang chạy ở chế độ App độc lập, hoặc người dùng tắt banner -> ẩn banner
   if (isInstalled || isDismissed) {
     return null;
   }
 
-  const handleInstallClick = async () => {
+  const handlePwaClick = async () => {
     const res = await triggerInstall();
     if (res.outcome === 'ios' || isIOS) {
       setIsIOSModalOpen(true);
     } else if (res.outcome === 'unsupported') {
-      alert('Để cài đặt ứng dụng: Hãy bấm vào dấu 3 chấm ⋮ trên trình duyệt -> Chọn "Cài đặt ứng dụng" hoặc "Thêm vào Màn hình chính" nhé!');
+      window.location.href = '/LoveSpace.apk';
     }
   };
 
   return (
     <>
-      {/* Banner Cài Đặt App */}
+      {/* Banner Tải File APK & Cài Đặt App */}
       <div className="relative mb-3.5 p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-400 text-white shadow-glow animate-fade-in flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="p-2 rounded-xl bg-white/20 backdrop-blur-md shrink-0">
@@ -33,25 +33,27 @@ export const PWAInstallBanner: React.FC = () => {
           </div>
           <div className="min-w-0">
             <h4 className="text-xs sm:text-sm font-black truncate flex items-center gap-1.5">
-              <span>Cài Đặt App LoveSpace</span>
+              <span>Tải App LoveSpace (.APK)</span>
               <span className="text-[10px] bg-white text-rose-600 font-extrabold px-1.5 py-0.2 rounded-full uppercase">
                 Miễn Phí
               </span>
             </h4>
             <p className="text-[11px] text-rose-100 line-clamp-1">
-              Thêm icon ngoài màn hình chính, mở toàn màn hình & nhận chuông thông báo!
+              Tải file APK trực tiếp về máy hoặc thêm vào màn hình chính!
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
-          <button
-            onClick={handleInstallClick}
+          {/* Nút Tải APK Trực Tiếp */}
+          <a
+            href="/LoveSpace.apk"
+            download="LoveSpace.apk"
             className="px-3 py-1.5 bg-white text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-black shadow-sm active:scale-95 transition-all flex items-center gap-1"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>Tải App</span>
-          </button>
+            <span>Tải File APK</span>
+          </a>
 
           <button
             onClick={() => setIsDismissed(true)}
