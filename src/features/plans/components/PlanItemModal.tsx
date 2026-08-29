@@ -3,6 +3,7 @@ import { PlanTimelineItem } from '../../../types/plan.types';
 import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { EmojiPickerPalette } from '../../../components/ui/EmojiPickerPalette';
+import { DollarSign, Clock, MapPin, Sparkles } from 'lucide-react';
 
 interface PlanItemModalProps {
   isOpen: boolean;
@@ -15,18 +16,26 @@ interface PlanItemModalProps {
 
 const COMMON_EMOJIS = ['🚗', '🛵', '🐶', '🍱', '🍵', '🧋', '❤️🔥', '🍜', '🎬', '🛍️', '🏨', '☕', '🍓', '🍰', '🌅', '🎡'];
 
-const TIME_PRESETS = [
-  '08:00 - 09:00',
-  '09:00 - 10:00',
-  '10:00 - 11:00',
-  '11:15 - 12:15',
-  '12:30 - 13:30',
-  '14:00 - 18:00',
-  '18:00 - 19:30',
-  '20:00 - 22:00',
+const TIME_SLOT_PRESETS = [
+  { label: '🌅 Sáng sớm', time: '07:30 - 09:00' },
+  { label: '☕ Buổi sáng', time: '09:00 - 11:00' },
+  { label: '🍱 Ăn trưa', time: '11:15 - 12:30' },
+  { label: '🍵 Cà phê chiều', time: '12:30 - 14:00' },
+  { label: '❤️ Nghỉ ngơi/Vui chơi', time: '14:00 - 18:00' },
+  { label: '🍜 Ăn tối', time: '18:00 - 19:30' },
+  { label: '🌙 Dạo phố đêm', time: '20:00 - 22:30' },
 ];
 
-const COST_PRESETS = ['0đ tại có cục chồng chở', '50k', '100k', '150k', '~200k', '~250 - 300k', '500k'];
+const COST_QUICK_PRESETS = [
+  { label: '0đ (Cục chồng chở)', val: '0đ tại có cục chồng chở' },
+  { label: '50k', val: '50k' },
+  { label: '100k', val: '100k' },
+  { label: '200k', val: '200k' },
+  { label: '~250 - 300k', val: '~250 - 300k' },
+  { label: '400k', val: '400k' },
+  { label: '500k', val: '500k' },
+  { label: '1 triệu', val: '1000k' },
+];
 
 export const PlanItemModal: React.FC<PlanItemModalProps> = ({
   isOpen,
@@ -52,7 +61,7 @@ export const PlanItemModal: React.FC<PlanItemModalProps> = ({
       setTimeRange(initialItem.timeRange || '');
       setActivity(initialItem.activity || '');
       setEmoji(initialItem.emoji || '🚗');
-      setEstimatedCost(initialItem.estimatedCost || '');
+      setEstimatedCost(initialItem.estimatedCost || (initialItem.numericCost ? `${initialItem.numericCost / 1000}k` : ''));
       setLocationUrl(initialItem.locationUrl || '');
       setNotes(initialItem.notes || '');
       setPaidBy(initialItem.paidBy || 'husband');
@@ -68,15 +77,18 @@ export const PlanItemModal: React.FC<PlanItemModalProps> = ({
     }
   }, [initialItem, dayIndex, isOpen]);
 
-  // Trích xuất số từ chuỗi chi phí (vd: "~250 - 300k" -> 275000, "200k" -> 200000)
+  // Trích xuất và phân tích số tiền tự động cực kỳ thông minh
   const parseNumericCost = (str: string): number => {
     if (!str) return 0;
-    const clean = str.toLowerCase();
-    const numbers = clean.match(/\d+(\.\d+)?/g);
+    const clean = str.toLowerCase().trim();
+    if (clean.includes('0đ') || clean.includes('miễn phí') || clean.includes('free')) return 0;
+
+    // Xử lý các dạng ~250 - 300k, 250k - 300k
+    const numbers = clean.replace(/,/g, '.').match(/\d+(\.\d+)?/g);
     if (!numbers || numbers.length === 0) return 0;
 
     let avg = 0;
-    if (numbers.length >= 2) {
+    if (numbers.length >= 2 && (clean.includes('-') || clean.includes('~'))) {
       avg = (parseFloat(numbers[0]) + parseFloat(numbers[1])) / 2;
     } else {
       avg = parseFloat(numbers[0]);
@@ -88,10 +100,21 @@ export const PlanItemModal: React.FC<PlanItemModalProps> = ({
     if (clean.includes('k')) {
       return avg * 1000;
     }
-    if (avg < 1000 && avg > 0) {
-      return avg * 1000; // Mặc định nếu gõ 200 -> 200k
+    // Nếu gõ số lớn hơn 1000 (vd: 200000)
+    if (avg >= 1000) {
+      return avg;
+    }
+    // Nếu gõ số nhỏ (vd: 50, 100, 200, 250) -> mặc định là 50k, 100k, 200k, 250k
+    if (avg > 0 && avg < 1000) {
+      return avg * 1000;
     }
     return avg;
+  };
+
+  const calculatedNumeric = parseNumericCost(estimatedCost);
+
+  const formatVND = (val: number) => {
+    return `${val.toLocaleString('vi-VN')} đ`;
   };
 
   const handleSave = () => {
@@ -102,8 +125,8 @@ export const PlanItemModal: React.FC<PlanItemModalProps> = ({
       timeRange: timeRange.trim() || '09:00',
       activity: activity.trim(),
       emoji,
-      estimatedCost: estimatedCost.trim(),
-      numericCost: parseNumericCost(estimatedCost),
+      estimatedCost: estimatedCost.trim() || (calculatedNumeric > 0 ? formatVND(calculatedNumeric) : '0đ'),
+      numericCost: calculatedNumeric,
       locationUrl: locationUrl.trim(),
       notes: notes.trim(),
       paidBy,
@@ -116,10 +139,10 @@ export const PlanItemModal: React.FC<PlanItemModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={initialItem ? 'Chỉnh Sửa Chặng Lịch Trình ✏️' : 'Thêm Chặng Lịch Trình Mới ➕'}
+      title={initialItem ? 'Chỉnh Sửa Khung Giờ & Hoạt Động ✏️' : 'Thêm Khung Giờ & Việc Cần Làm ➕'}
     >
-      <div className="space-y-4">
-        {/* Chọn ngày (Nếu là kế hoạch nhiều ngày) */}
+      <div className="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
+        {/* Chọn ngày (Nếu là chuyến đi dài ngày) */}
         {totalDays > 1 && (
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">Áp dụng cho ngày:</label>
@@ -142,44 +165,50 @@ export const PlanItemModal: React.FC<PlanItemModalProps> = ({
           </div>
         )}
 
-        {/* Thời gian */}
+        {/* 1. KHUNG GIỜ CHI TIẾT */}
         <div>
           <label className="block text-xs font-bold text-slate-700 mb-1">
-            Thời gian dự kiến <span className="text-rose-500">*</span>:
+            <Clock className="w-3.5 h-3.5 inline mr-1 text-rose-500" />
+            Khung giờ làm việc / hoạt động <span className="text-rose-500">*</span>:
           </label>
           <input
             type="text"
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
-            placeholder="Ví dụ: 10:00 - 11:00 hoặc 12:15 ~ 12:30"
+            placeholder="Ví dụ: 09:00 - 10:30, 11:15 ~ 12:30, 18:00..."
             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-rose-400"
           />
           {/* Quick Time Presets */}
           <div className="flex flex-wrap gap-1 mt-1.5">
-            {TIME_PRESETS.map((t, idx) => (
+            {TIME_SLOT_PRESETS.map((t, idx) => (
               <button
                 key={idx}
                 type="button"
-                onClick={() => setTimeRange(t)}
-                className="text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-rose-50 hover:text-rose-600"
+                onClick={() => setTimeRange(t.time)}
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border transition-all ${
+                  timeRange === t.time
+                    ? 'bg-rose-500 text-white border-rose-500 shadow-xs'
+                    : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-rose-50 hover:text-rose-600'
+                }`}
               >
-                {t}
+                {t.label} ({t.time})
               </button>
             ))}
           </div>
         </div>
 
-        {/* Emoji & Tên Hoạt Động */}
+        {/* 2. VIỆC CẦN LÀM / HOẠT ĐỘNG */}
         <div>
           <label className="block text-xs font-bold text-slate-700 mb-1">
-            Biểu tượng & Lịch trình hoạt động <span className="text-rose-500">*</span>:
+            <Sparkles className="w-3.5 h-3.5 inline mr-1 text-amber-500" />
+            Làm gì trong khung giờ này? <span className="text-rose-500">*</span>:
           </label>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setShowEmojiPalette(!showEmojiPalette)}
               className="w-10 h-10 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 flex items-center justify-center text-xl shadow-xs transition-transform active:scale-95"
-              title="Chọn Emoji khác"
+              title="Chọn Emoji biểu cảm"
             >
               {emoji}
             </button>
@@ -187,7 +216,7 @@ export const PlanItemModal: React.FC<PlanItemModalProps> = ({
               type="text"
               value={activity}
               onChange={(e) => setActivity(e.target.value)}
-              placeholder="Ví dụ: Đến YEPO - Dog & Ice Cream rùi chơi, chụp hình..."
+              placeholder="Ví dụ: Ăn Bún đậu A Chảnh, Uống matcha, Đi xem phim..."
               className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-rose-400"
               autoFocus
             />
@@ -218,99 +247,118 @@ export const PlanItemModal: React.FC<PlanItemModalProps> = ({
 
           {/* Expanded Emoji Palette */}
           {showEmojiPalette && (
-            <div className="mt-2 p-2 bg-slate-50 rounded-2xl border border-slate-200 animate-fade-in max-h-48 overflow-y-auto">
+            <div className="mt-2 p-2 bg-slate-50 rounded-2xl border border-slate-200 animate-fade-in max-h-44 overflow-y-auto">
               <EmojiPickerPalette selectedEmoji={emoji} onSelectEmoji={(em) => { setEmoji(em); setShowEmojiPalette(false); }} />
             </div>
           )}
         </div>
 
-        {/* Dự trù ngân sách & Người chi trả */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* 3. CHI PHÍ & TỰ ĐỘNG CỘNG TỔNG */}
+        <div className="p-3 bg-amber-50/80 rounded-2xl border border-amber-200/80 space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-bold text-amber-950 flex items-center gap-1">
+              <DollarSign className="w-3.5 h-3.5 text-amber-600" />
+              <span>Việc này tốn bao nhiêu tiền?</span>
+            </label>
+            {/* Live Recognized Sum */}
+            <span className="text-xs font-black text-amber-900 bg-amber-200/80 px-2 py-0.5 rounded-lg border border-amber-300">
+              Cộng vào tổng: {formatVND(calculatedNumeric)}
+            </span>
+          </div>
+
+          <input
+            type="text"
+            value={estimatedCost}
+            onChange={(e) => setEstimatedCost(e.target.value)}
+            placeholder="Nhập số tiền (vd: 200k, 250 - 300k, 200000, 0đ...)"
+            className="w-full bg-white border border-amber-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-amber-500 shadow-inner"
+          />
+
+          {/* Quick Cost Presets */}
+          <div className="flex flex-wrap gap-1 pt-0.5">
+            {COST_QUICK_PRESETS.map((c, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => setEstimatedCost(c.val)}
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border transition-all ${
+                  estimatedCost === c.val
+                    ? 'bg-amber-500 text-white border-amber-600 shadow-xs'
+                    : 'bg-white text-amber-900 border-amber-200 hover:bg-amber-100'
+                }`}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 4. AI CHI TRẢ */}
+        <div>
+          <label className="block text-xs font-bold text-slate-700 mb-1">Ai chi trả cho khoản này:</label>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setPaidBy('husband')}
+              className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+                paidBy === 'husband'
+                  ? 'bg-blue-500 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              <span>🐻 Chồng bao</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaidBy('wife')}
+              className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+                paidBy === 'wife'
+                  ? 'bg-rose-500 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              <span>🐰 Vợ bao</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaidBy('shared')}
+              className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+                paidBy === 'shared'
+                  ? 'bg-amber-500 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              <span>💕 Quỹ chung</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Link Bản Đồ & Lời Dặn */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Dự trù ngân sách:</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              <MapPin className="w-3.5 h-3.5 inline mr-1 text-rose-500" />
+              Link Google Maps:
+            </label>
+            <input
+              type="url"
+              value={locationUrl}
+              onChange={(e) => setLocationUrl(e.target.value)}
+              placeholder="https://maps.app.goo.gl/..."
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-rose-400"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Ghi chú thêm:</label>
             <input
               type="text"
-              value={estimatedCost}
-              onChange={(e) => setEstimatedCost(e.target.value)}
-              placeholder="Ví dụ: ~250 - 300k, 200k, 0đ..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-rose-400"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Nhớ mang áo ấm, chụp nhiều ảnh..."
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-rose-400"
             />
-            {/* Quick Cost Presets */}
-            <div className="flex flex-wrap gap-1 mt-1.5">
-              {COST_PRESETS.map((c, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setEstimatedCost(c)}
-                  className="text-[10px] font-medium px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-amber-50 hover:text-amber-700"
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
           </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Ai chi trả:</label>
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => setPaidBy('husband')}
-                className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
-                  paidBy === 'husband'
-                    ? 'bg-blue-500 text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                <span>🐻 Chồng</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setPaidBy('wife')}
-                className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
-                  paidBy === 'wife'
-                    ? 'bg-rose-500 text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                <span>🐰 Vợ</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setPaidBy('shared')}
-                className={`flex-1 py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
-                  paidBy === 'shared'
-                    ? 'bg-amber-500 text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                <span>💕 Quỹ chung</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Link Google Maps & Ghi chú thêm */}
-        <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Link Google Maps (Nếu có):</label>
-          <input
-            type="url"
-            value={locationUrl}
-            onChange={(e) => setLocationUrl(e.target.value)}
-            placeholder="https://maps.app.goo.gl/..."
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-rose-400"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Ghi chú hoặc lời dặn:</label>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Ví dụ: Nhớ mang váy xinh để chụp ảnh, ghé mua thêm quà..."
-            rows={2}
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-rose-400 resize-none"
-          />
         </div>
 
         {/* Actions */}
@@ -319,7 +367,7 @@ export const PlanItemModal: React.FC<PlanItemModalProps> = ({
             Hủy
           </Button>
           <Button variant="romantic" size="sm" onClick={handleSave} disabled={!activity.trim()}>
-            {initialItem ? 'Cập Nhật Chặng' : 'Thêm Vào Lịch Trình'}
+            {initialItem ? 'Lưu Thay Đổi' : 'Thêm Vào Lịch Trình ✨'}
           </Button>
         </div>
       </div>

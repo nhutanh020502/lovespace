@@ -85,12 +85,15 @@
 - **📸 Kho Ảnh Polaroid Vintage:** Khung ảnh nghệ thuật kèm băng dính washi tape và hiệu ứng zoom mượt mà.
 - **📱 Cập nhật Web & File `LoveSpace.apk` Mới Nhất:** Tải về và triển khai trực tiếp trên Vercel.
 
-### 📅 [2026-08-29] - Nâng Cấp Kho Kỷ Niệm (Chụp Ảnh Camera Liền, Tự Động Định Vị GPS & 2 Tab)
-- **📸 Chụp Ảnh Camera 1-Chạm:** Bấm nút chụp là mở thẳng camera thiết bị chụp và upload tự động.
-- **📍 Tự Động Lưu Địa Chỉ GPS:** Tích hợp Geolocation và Nominatim OpenStreetMap tự động lấy tên đường, quận, thành phố khi chụp ảnh.
-- **🔗 Dán Link Ảnh Trực Tiếp & Link Địa Điểm:** Hỗ trợ nhập URL ảnh từ internet và link Google Maps / TikTok review.
-- **🗂️ Phân Chia 2 Tab Riêng Biệt:** 
-  - `📸 Ảnh Kỷ Niệm Đôi 💕` (Ảnh selfie, khoảnh khắc ngọt ngào 2 người).
-  - `🍽️ Điểm Hẹn & Ăn Chơi 🌴` (Check-in quán ăn, du lịch, tiệm cà phê).
-- **📱 Build và Cập Nhật File Cài Đặt `LoveSpace.apk` Trực Tiếp:** Tải về máy từ web với 1 click.
-- **✨ Tối Ưu Font Chữ & Responsive Toàn Diện:** Font `Plus Jakarta Sans` chuẩn tiếng Việt và Header co giãn mượt mà.
+### 📅 [2026-08-30] - Ra Mắt Module "Kế Hoạch & Lịch Trình Hẹn Hò / Du Lịch Dài Ngày" (Dating & Travel Planner)
+- **📋 Bảng Kế Hoạch 3 Cột Chuẩn Yêu Cầu:**
+  - Cột Thời gian linh hoạt với ghi chú vui nhộn (VD: *tại cục chồng hay đi trễ*).
+  - Cột Lịch trình hoạt động kèm kho Emoji đa dạng, tên quán/hoạt động, ghi chú và link Google Maps.
+  - Cột Dự trù ngân sách (`~250 - 300k`, `200k`, `0đ tại có cục chồng chở`...).
+  - Dòng tổng kết chi phí dự kiến nổi bật màu vàng cam pastel ở đáy bảng.
+- **✨ Chế Độ Xem Đôi Linh Hoạt:** Chuyển đổi 1-chạm giữa **Bảng Kế Hoạch (Table View)** và **Dòng Thời Gian Tình Yêu (Timeline View)** kèm nút tick hoàn thành chặng.
+- **🌴 Hỗ Trợ Chuyến Đi Dài Ngày (Multi-Day Trips: 2N1Đ, 3N2Đ...):** Phân chia tab theo từng ngày (Ngày 1, Ngày 2, Ngày 3...), lưu thông tin khách sạn/homestay và phương tiện di chuyển.
+- **🎒 Danh Sách Xếp Đồ Vào Vali (Packing Checklist):** Quản lý đồ cần mang theo, phân công Chồng/Vợ và theo dõi thanh tiến độ xếp đồ %.
+- **📁 Kho Lưu Trữ Kỷ Niệm & Nhân Bản (History Archive & Clone):** Lưu lại mọi lịch trình đã đi trong quá khứ; 1-click **"Nhân bản kế hoạch"** để đi lại chuyến đi yêu thích vào ngày mới.
+- **🔄 Đồng Bộ Supabase Realtime & Push Notification:** Tự động tạo bảng `dating_plans` trên Supabase và đồng bộ 2 chiều tức thì giữa 2 người.
+- **📱 Cập nhật file cài đặt Android `LoveSpace.apk` và deploy lên Vercel.**

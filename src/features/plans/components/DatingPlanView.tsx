@@ -325,11 +325,15 @@ export const DatingPlanView: React.FC<DatingPlanViewProps> = ({
                         <span className="text-slate-400">Chưa có chặng</span>
                       )}
                     </span>
-                    {plan.summaryBudgetNote && (
+                    {totalNumericCost > 0 ? (
+                      <span className="text-[11px] font-black text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-full border border-amber-300 shadow-xs">
+                        💰 ~ {totalNumericCost.toLocaleString('vi-VN')} đ
+                      </span>
+                    ) : plan.summaryBudgetNote ? (
                       <span className="text-[11px] font-extrabold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
                         💰 {plan.summaryBudgetNote}
                       </span>
-                    )}
+                    ) : null}
                   </div>
 
                   <div className="flex items-center gap-1 text-rose-600 font-bold group-hover:translate-x-0.5 transition-transform">

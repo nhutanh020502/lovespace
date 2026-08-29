@@ -1,7 +1,7 @@
 import React from 'react';
 import { PlanTimelineItem, DatingPlan } from '../../../types/plan.types';
 import { Button } from '../../../components/ui/Button';
-import { Edit2, Trash2, Plus, CheckCircle2, Circle, ExternalLink } from 'lucide-react';
+import { Edit2, Trash2, Plus, CheckCircle2, Circle, ExternalLink, Calculator, DollarSign } from 'lucide-react';
 
 interface PlanTableViewProps {
   plan: DatingPlan;
@@ -27,13 +27,33 @@ export const PlanTableView: React.FC<PlanTableViewProps> = ({
   // Lọc items của ngày được chọn
   const dayItems = items.filter((item) => (item.dayIndex || 1) === selectedDayIndex);
 
-  // Tính tổng chi phí số của ngày này
+  // Tính tổng chi phí tự động cộng dồn của ngày này
   const totalNumeric = dayItems.reduce((acc, item) => acc + (item.numericCost || 0), 0);
 
-  const formatCurrency = (val: number) => {
+  // Tính chi phí theo từng người chi trả
+  const husbandTotal = dayItems
+    .filter((item) => item.paidBy === 'husband' || !item.paidBy)
+    .reduce((acc, item) => acc + (item.numericCost || 0), 0);
+
+  const wifeTotal = dayItems
+    .filter((item) => item.paidBy === 'wife')
+    .reduce((acc, item) => acc + (item.numericCost || 0), 0);
+
+  const sharedTotal = dayItems
+    .filter((item) => item.paidBy === 'shared')
+    .reduce((acc, item) => acc + (item.numericCost || 0), 0);
+
+  // Tính tổng toàn bộ chuyến đi (nếu nhiều ngày)
+  const allDaysTotal = items.reduce((acc, item) => acc + (item.numericCost || 0), 0);
+
+  const formatVND = (val: number) => {
+    return `${val.toLocaleString('vi-VN')} đ`;
+  };
+
+  const formatShortCurrency = (val: number) => {
     if (val >= 1000000) {
       const mil = val / 1000000;
-      return `${mil % 1 === 0 ? mil : mil.toFixed(1)} triệu`;
+      return `${mil % 1 === 0 ? mil : mil.toFixed(2)} triệu`;
     }
     if (val >= 1000) {
       return `${Math.round(val / 1000)}k`;
@@ -43,14 +63,14 @@ export const PlanTableView: React.FC<PlanTableViewProps> = ({
 
   return (
     <div className="w-full bg-white rounded-2xl sm:rounded-3xl border border-slate-300/80 shadow-md overflow-hidden animate-fade-in text-slate-800">
-      {/* 1. Header Bảng: Tên Kế Hoạch (Giống mẫu) */}
-      <div className="bg-slate-50/90 border-b border-slate-300/80 px-4 py-3 sm:py-3.5 flex items-center justify-between gap-2">
+      {/* 1. Header Bảng: Tên Kế Hoạch (Giống mẫu ảnh) */}
+      <div className="bg-slate-50/95 border-b border-slate-300/80 px-4 py-3 sm:py-3.5 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-xl shrink-0">⏰</span>
           <h3 className="text-sm sm:text-base font-black text-slate-900 truncate">
             {plan.title}{' '}
             {plan.totalDays > 1 && (
-              <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
+              <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200 ml-1">
                 Ngày {selectedDayIndex}
               </span>
             )}
@@ -62,19 +82,19 @@ export const PlanTableView: React.FC<PlanTableViewProps> = ({
             variant="romantic"
             size="sm"
             onClick={() => onOpenAddItem(selectedDayIndex)}
-            className="text-xs shrink-0 py-1 px-2.5 h-8"
+            className="text-xs shrink-0 py-1.5 px-3 h-8 shadow-xs"
           >
             <Plus className="w-3.5 h-3.5 mr-1" />
-            <span>Thêm chặng</span>
+            <span>+ Thêm khung giờ</span>
           </Button>
         )}
       </div>
 
-      {/* 2. Nội dung bảng (Table 3 cột) */}
+      {/* 2. Nội dung bảng (Table 3 cột chi tiết) */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse min-w-[500px]">
+        <table className="w-full text-left border-collapse min-w-[520px]">
           <thead>
-            <tr className="border-b border-slate-300/80 bg-slate-100/70 text-slate-800 text-xs sm:text-sm font-black">
+            <tr className="border-b border-slate-300/80 bg-slate-100/80 text-slate-800 text-xs sm:text-sm font-black">
               <th className="py-3 px-3 sm:px-4 w-[28%] border-r border-slate-300/80 text-center leading-tight">
                 Thời gian dự kiến
                 {plan.timeHeaderNote && (
@@ -84,7 +104,7 @@ export const PlanTableView: React.FC<PlanTableViewProps> = ({
                 )}
               </th>
               <th className="py-3 px-3 sm:px-4 w-[48%] border-r border-slate-300/80 text-center">
-                Lịch trình
+                Lịch trình hoạt động
               </th>
               <th className="py-3 px-3 sm:px-4 w-[24%] text-center">
                 Dự trù ngân sách
@@ -153,20 +173,20 @@ export const PlanTableView: React.FC<PlanTableViewProps> = ({
                         </div>
                       </div>
 
-                      {/* Nút Sửa & Xóa (Chỉ hiện khi hover hoặc trên mobile) */}
+                      {/* Nút Sửa & Xóa (Hiện khi hover hoặc trên mobile) */}
                       {!readOnly && (
                         <div className="flex items-center gap-1 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => onOpenEditItem(item)}
                             className="p-1 text-slate-400 hover:text-rose-600 rounded-lg transition-colors"
-                            title="Sửa chặng này"
+                            title="Sửa khung giờ này"
                           >
                             <Edit2 className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={() => onDeleteItem(item.id)}
                             className="p-1 text-slate-400 hover:text-red-500 rounded-lg transition-colors"
-                            title="Xóa chặng này"
+                            title="Xóa khung giờ này"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -175,14 +195,21 @@ export const PlanTableView: React.FC<PlanTableViewProps> = ({
                     </div>
                   </td>
 
-                  {/* Cột 3: Dự trù ngân sách */}
+                  {/* Cột 3: Dự trù ngân sách từng việc */}
                   <td className="py-3 px-3 sm:px-4 font-semibold text-slate-800 text-center align-middle whitespace-nowrap">
                     {item.estimatedCost ? (
-                      <span className="text-slate-800">{item.estimatedCost}</span>
+                      <div className="flex flex-col items-center gap-0.5">
+                        <span className="text-slate-900 font-bold">{item.estimatedCost}</span>
+                        {item.numericCost !== undefined && item.numericCost > 0 && (
+                          <span className="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200/60 font-semibold">
+                            +{formatShortCurrency(item.numericCost)}
+                          </span>
+                        )}
+                      </div>
                     ) : item.numericCost && item.numericCost > 0 ? (
-                      <span>{formatCurrency(item.numericCost)}</span>
+                      <span className="text-slate-900 font-bold">+{formatVND(item.numericCost)}</span>
                     ) : (
-                      <span className="text-slate-300 font-normal">-</span>
+                      <span className="text-slate-300 font-normal">0đ</span>
                     )}
                   </td>
                 </tr>
@@ -190,31 +217,59 @@ export const PlanTableView: React.FC<PlanTableViewProps> = ({
             ) : (
               <tr>
                 <td colSpan={3} className="py-8 text-center text-slate-400 italic">
-                  Chưa có lịch trình cho ngày này. Bấm nút "+ Thêm chặng" để bắt đầu lên kế hoạch nhé! 📝
+                  Chưa có khung giờ nào. Bấm nút "+ Thêm khung giờ" để tạo lịch trình và tự động tính tiền nhé! 📝✨
                 </td>
               </tr>
             )}
           </tbody>
 
-          {/* 3. Footer Bảng: Tổng chi phí dự kiến (Màu vàng cam pastel giống ảnh mẫu) */}
+          {/* 3. Footer Bảng: TỔNG CHI PHÍ TỰ ĐỘNG CỘNG (Màu vàng cam pastel giống mẫu ảnh) */}
           <tfoot>
-            <tr className="bg-amber-100/80 border-t border-slate-300/80 text-amber-950 font-bold text-xs sm:text-sm">
-              <td colSpan={3} className="py-3 px-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="font-black text-amber-900">
-                      {plan.summaryBudgetNote || 'Tổng chi phí (dự kiến):'}
+            <tr className="bg-amber-100/90 border-t-2 border-amber-300 text-amber-950 font-bold text-xs sm:text-sm">
+              <td colSpan={3} className="py-3.5 px-4 space-y-2">
+                {/* Dòng 1: Tổng chi phí tự động cộng */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-black text-amber-950 text-sm flex items-center gap-1.5">
+                      <Calculator className="w-4 h-4 text-amber-700" />
+                      <span>{plan.summaryBudgetNote || 'Tổng chi phí (dự kiến):'}</span>
                     </span>
-                    {totalNumeric > 0 && (
-                      <span className="bg-amber-200/90 text-amber-950 text-xs font-black px-2.5 py-0.5 rounded-full border border-amber-300 shadow-xs">
-                        ~ {formatCurrency(totalNumeric)}
+                    <span className="bg-amber-400/90 text-amber-950 text-sm sm:text-base font-black px-3 py-0.5 rounded-xl border border-amber-500/50 shadow-sm animate-pulse">
+                      ~ {formatVND(totalNumeric)} {totalNumeric > 0 && `(${formatShortCurrency(totalNumeric)})`} 🥹
+                    </span>
+                  </div>
+
+                  {plan.totalDays > 1 && (
+                    <div className="text-xs font-black text-amber-900 bg-amber-200/90 px-3 py-1 rounded-xl border border-amber-300 self-start sm:self-auto">
+                      🌟 Tổng cả chuyến ({plan.totalDays} ngày): {formatVND(allDaysTotal)}
+                    </div>
+                  )}
+                </div>
+
+                {/* Dòng 2: Chi tiết người chi trả tự động tính */}
+                {totalNumeric > 0 && (
+                  <div className="pt-1.5 border-t border-amber-200/80 flex flex-wrap items-center gap-3 text-[11px] font-bold text-amber-900/90">
+                    <span className="text-slate-500">Phân chia dự kiến:</span>
+                    {husbandTotal > 0 && (
+                      <span className="flex items-center gap-1 bg-white/70 px-2 py-0.5 rounded-lg border border-blue-200 text-blue-900">
+                        <span>🐻 Chồng:</span>
+                        <strong className="text-blue-700">{formatVND(husbandTotal)}</strong>
+                      </span>
+                    )}
+                    {wifeTotal > 0 && (
+                      <span className="flex items-center gap-1 bg-white/70 px-2 py-0.5 rounded-lg border border-rose-200 text-rose-900">
+                        <span>🐰 Vợ:</span>
+                        <strong className="text-rose-700">{formatVND(wifeTotal)}</strong>
+                      </span>
+                    )}
+                    {sharedTotal > 0 && (
+                      <span className="flex items-center gap-1 bg-white/70 px-2 py-0.5 rounded-lg border border-amber-300 text-amber-950">
+                        <span>💕 Quỹ chung:</span>
+                        <strong>{formatVND(sharedTotal)}</strong>
                       </span>
                     )}
                   </div>
-                  <span className="text-[11px] font-medium text-amber-800/80 italic">
-                    💡 Dự trù để 2 bạn chuẩn bị ví tiền rủng rỉnh nhé! 🥹
-                  </span>
-                </div>
+                )}
               </td>
             </tr>
           </tfoot>

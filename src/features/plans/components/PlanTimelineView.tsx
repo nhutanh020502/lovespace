@@ -154,6 +154,21 @@ export const PlanTimelineView: React.FC<PlanTimelineViewProps> = ({
           </div>
         )}
       </div>
+
+      {/* Footer Tự Động Cộng Tổng Chi Phí */}
+      {dayItems.length > 0 && (
+        <div className="p-3.5 rounded-2xl bg-amber-100/90 border border-amber-300 text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-xs">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-black">💰 Tổng chi phí ngày {selectedDayIndex}:</span>
+            <span className="text-sm sm:text-base font-black text-amber-950 bg-amber-300/90 px-2.5 py-0.5 rounded-xl border border-amber-400">
+              ~ {dayItems.reduce((acc, it) => acc + (it.numericCost || 0), 0).toLocaleString('vi-VN')} đ
+            </span>
+          </div>
+          <span className="text-[11px] font-bold text-amber-800 italic">
+            ✨ Tự động cộng từ từng việc làm trong ngày
+          </span>
+        </div>
+      )}
     </div>
   );
 };
