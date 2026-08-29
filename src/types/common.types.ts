@@ -67,12 +67,21 @@ export interface HealthStatus {
   lastUpdated: string;
 }
 
+export interface MoodReplyContext {
+  senderName: string;
+  emoji: string;
+  caption: string;
+  photoUrl?: string;
+  moodLabel?: string;
+}
+
 export interface ChatMessage {
   id: string;
   senderId: string;
   text?: string;
   imageUrl?: string;
   stickerUrl?: string;
+  replyToMood?: MoodReplyContext;
   createdAt: string;
   reactions: Record<string, string[]>; // { '❤️': ['husband_id'], '💋': ['wife_id'] }
   isPinned?: boolean;

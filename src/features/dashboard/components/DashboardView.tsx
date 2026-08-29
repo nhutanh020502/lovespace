@@ -17,6 +17,7 @@ interface DashboardViewProps {
   todos: TodoItem[];
   onUpdateMood: (userId: string, mood: Partial<MoodStatus>) => void;
   onNavigateTab: (tab: any) => void;
+  onOpenChatWithMood?: (replyContext: any) => void;
   onTriggerInteraction: (interaction: CustomInteraction) => void;
   onPokeHeart: () => void;
   onSendKiss: () => void;
@@ -38,6 +39,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   todos,
   onUpdateMood,
   onNavigateTab,
+  onOpenChatWithMood,
   onTriggerInteraction,
   onPokeHeart,
   onToggleTodo,
@@ -83,6 +85,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         onOpenMoodPicker={() => setIsMoodPickerOpen(true)}
         onOpenChat={() => onNavigateTab('chat')}
         onQuickPoke={handleQuickPoke}
+        onReplyMood={onOpenChatWithMood}
       />
 
       {/* 3. Thanh Tương Tác 1 Chạm Nhanh Tự Do Tùy Chỉnh (Icon, Chữ, Màu sắc, Thêm/Xóa) */}

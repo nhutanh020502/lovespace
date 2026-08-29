@@ -28,6 +28,7 @@ import { INITIAL_PLANS } from './constants/initialPlans';
 import {
   UserRole,
   MoodStatus,
+  MoodReplyContext,
   HealthStatus,
   ChatMessage,
   MemoryPhoto,
@@ -98,6 +99,7 @@ export function App() {
   // Active Navigation Tab
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [activeReplyMood, setActiveReplyMood] = useState<MoodReplyContext | null>(null);
 
   // Interactive Sound & Haptic
   const audio = useAudio(settings.soundEnabled);
@@ -288,6 +290,7 @@ export function App() {
             text: payload.new.text,
             imageUrl: payload.new.image_url,
             stickerUrl: payload.new.sticker_url,
+            replyToMood: payload.new.reply_to_mood,
             reactions: payload.new.reactions || {},
             isPinned: payload.new.is_pinned,
             status: payload.new.status,
@@ -664,7 +667,7 @@ export function App() {
   };
 
   // Chat Actions
-  const handleSendMessage = (msgData: { text?: string; imageUrl?: string; stickerUrl?: string }) => {
+  const handleSendMessage = (msgData: { text?: string; imageUrl?: string; stickerUrl?: string; replyToMood?: MoodReplyContext }) => {
     const currentUserId = settings.currentActiveUser === 'husband' ? settings.partner1.id : settings.partner2.id;
     const msgId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
       ? crypto.randomUUID()
@@ -676,6 +679,7 @@ export function App() {
       text: msgData.text,
       imageUrl: msgData.imageUrl,
       stickerUrl: msgData.stickerUrl,
+      replyToMood: msgData.replyToMood,
       createdAt: new Date().toISOString(),
       reactions: {},
       status: 'sent',
@@ -1004,6 +1008,10 @@ export function App() {
             todos={todos}
             onUpdateMood={handleUpdateMood}
             onNavigateTab={setActiveTab}
+            onOpenChatWithMood={(replyCtx) => {
+              setActiveReplyMood(replyCtx);
+              setActiveTab('chat');
+            }}
             onTriggerInteraction={handleTriggerInteraction}
             onPokeHeart={handlePokeHeart}
             onSendKiss={handleSendKiss}
@@ -1068,6 +1076,8 @@ export function App() {
             partner1={settings.partner1}
             partner2={settings.partner2}
             messages={messages}
+            replyMood={activeReplyMood}
+            onClearReplyMood={() => setActiveReplyMood(null)}
             onSendMessage={handleSendMessage}
             onAddReaction={handleAddReaction}
             onTogglePin={handleTogglePin}

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card } from '../../../components/ui/Card';
 import { Avatar } from '../../../components/ui/Avatar';
 import { Badge } from '../../../components/ui/Badge';
-import { UserProfile, MoodStatus } from '../../../types/common.types';
+import { UserProfile, MoodStatus, MoodReplyContext } from '../../../types/common.types';
 import { formatTimeVi } from '../../../utils/dateUtils';
 import { Sparkles, MessageCircle, Heart, User, Users, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,6 +15,7 @@ interface PartnerStatusHeroProps {
   onOpenMoodPicker: () => void;
   onOpenChat: () => void;
   onQuickPoke: () => void;
+  onReplyMood?: (replyMoodContext: MoodReplyContext) => void;
 }
 
 export const PartnerStatusHero: React.FC<PartnerStatusHeroProps> = ({
@@ -25,6 +26,7 @@ export const PartnerStatusHero: React.FC<PartnerStatusHeroProps> = ({
   onOpenMoodPicker,
   onOpenChat,
   onQuickPoke,
+  onReplyMood,
 }) => {
   const [viewRole, setViewRole] = useState<'partner' | 'me'>('partner');
 
@@ -233,7 +235,18 @@ export const PartnerStatusHero: React.FC<PartnerStatusHeroProps> = ({
               <span>Thả Tim Cho {partner.nickname}</span>
             </button>
             <button
-              onClick={onOpenChat}
+              onClick={() => {
+                if (onReplyMood) {
+                  onReplyMood({
+                    senderName: partner.nickname || partner.name,
+                    emoji: moodConfig.emoji,
+                    caption: currentDisplayMood.caption,
+                    photoUrl: currentDisplayMood.photoUrl,
+                    moodLabel: moodConfig.text,
+                  });
+                }
+                onOpenChat();
+              }}
               className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 hover:text-rose-600 text-xs font-black border border-slate-200 active:scale-95 transition-all shadow-sm"
             >
               <MessageCircle className="w-4 h-4 text-rose-500" />

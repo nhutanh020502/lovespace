@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChatMessage, UserRole, UserProfile } from '../../../types/common.types';
+import { ChatMessage, UserRole, UserProfile, MoodReplyContext } from '../../../types/common.types';
 import { Avatar } from '../../../components/ui/Avatar';
 import { Lightbox } from '../../../components/ui/Lightbox';
 import { formatTimeVi } from '../../../utils/dateUtils';
@@ -13,6 +13,7 @@ import {
   Loader2,
   Sparkles,
   Heart,
+  Reply,
 } from 'lucide-react';
 import { uploadImageToCloudinary } from '../../../services/cloudinaryService';
 import { EmojiPickerPalette } from '../../../components/ui/EmojiPickerPalette';
@@ -22,7 +23,9 @@ interface ChatViewProps {
   partner1: UserProfile;
   partner2: UserProfile;
   messages: ChatMessage[];
-  onSendMessage: (msg: { text?: string; imageUrl?: string; stickerUrl?: string }) => void;
+  replyMood?: MoodReplyContext | null;
+  onClearReplyMood?: () => void;
+  onSendMessage: (msg: { text?: string; imageUrl?: string; stickerUrl?: string; replyToMood?: MoodReplyContext }) => void;
   onAddReaction: (messageId: string, emoji: string) => void;
   onTogglePin: (messageId: string) => void;
 }
@@ -37,6 +40,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
   partner1,
   partner2,
   messages,
+  replyMood,
+  onClearReplyMood,
   onSendMessage,
   onAddReaction,
   onTogglePin,
@@ -65,9 +70,15 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
   const handleSend = () => {
     if (!inputText.trim()) return;
-    onSendMessage({ text: inputText.trim() });
+    onSendMessage({
+      text: inputText.trim(),
+      replyToMood: replyMood || undefined,
+    });
     setInputText('');
     setShowEmojiPicker(false);
+    if (onClearReplyMood) {
+      onClearReplyMood();
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -87,13 +98,21 @@ export const ChatView: React.FC<ChatViewProps> = ({
     try {
       const url = await uploadImageToCloudinary(file, 'chat');
       if (url) {
-        onSendMessage({ imageUrl: url });
+        onSendMessage({
+          imageUrl: url,
+          replyToMood: replyMood || undefined,
+        });
+        if (onClearReplyMood) onClearReplyMood();
       } else {
         // Fallback base64 nếu upload lỗi
         const reader = new FileReader();
         reader.onload = (event) => {
           if (event.target?.result) {
-            onSendMessage({ imageUrl: event.target.result as string });
+            onSendMessage({
+              imageUrl: event.target.result as string,
+              replyToMood: replyMood || undefined,
+            });
+            if (onClearReplyMood) onClearReplyMood();
           }
         };
         reader.readAsDataURL(file);
@@ -193,6 +212,42 @@ export const ChatView: React.FC<ChatViewProps> = ({
                       : 'bg-white text-slate-800 border border-slate-100 rounded-bl-none'
                   }`}
                 >
+                  {/* Quoted Mood / Status Card (Replying UI) */}
+                  {msg.replyToMood && (
+                    <div
+                      className={`mb-2 p-2.5 rounded-xl border text-xs flex items-start gap-2.5 backdrop-blur-sm transition-all ${
+                        isMe
+                          ? 'bg-black/15 border-white/25 text-white'
+                          : 'bg-rose-50/90 border-rose-200/90 text-slate-800'
+                      }`}
+                    >
+                      {msg.replyToMood.photoUrl ? (
+                        <img
+                          src={msg.replyToMood.photoUrl}
+                          alt="Quoted mood"
+                          className="w-10 h-10 rounded-lg object-cover border border-white/40 shrink-0 cursor-pointer"
+                          onClick={() => setSelectedPhotoUrl(msg.replyToMood?.photoUrl || null)}
+                        />
+                      ) : (
+                        <span className={`text-xl p-1 rounded-lg shrink-0 select-none shadow-xs ${isMe ? 'bg-white/20' : 'bg-white'}`}>
+                          {msg.replyToMood.emoji || '💬'}
+                        </span>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider opacity-90">
+                          <span className={isMe ? 'text-rose-100' : 'text-rose-600'}>
+                            💬 LỜI NHẮN TỪ {msg.replyToMood.senderName.toUpperCase()}
+                          </span>
+                        </div>
+                        {msg.replyToMood.caption && (
+                          <p className="font-bold truncate mt-0.5 italic">
+                            "{msg.replyToMood.caption}"
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Text Message */}
                   {msg.text && (
                     <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap break-words">
@@ -298,6 +353,41 @@ export const ChatView: React.FC<ChatViewProps> = ({
               setInputText((prev) => prev + emoji);
             }}
           />
+        </div>
+      )}
+
+      {/* Reply To Mood Banner */}
+      {replyMood && (
+        <div className="mb-2 p-2.5 bg-rose-50/95 backdrop-blur-md rounded-2xl border border-rose-200 shadow-sm flex items-center justify-between gap-2 animate-fade-in">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            {replyMood.photoUrl ? (
+              <img
+                src={replyMood.photoUrl}
+                alt="Quote"
+                className="w-10 h-10 rounded-xl object-cover border border-rose-200 shrink-0"
+              />
+            ) : (
+              <span className="text-xl p-1 bg-white rounded-xl shadow-xs border border-rose-100 shrink-0 select-none">
+                {replyMood.emoji || '💬'}
+              </span>
+            )}
+            <div className="min-w-0 flex-1">
+              <span className="text-[10px] font-black uppercase tracking-wider text-rose-600 block truncate">
+                💬 Đang trả lời lời nhắn của {replyMood.senderName}:
+              </span>
+              <p className="text-xs font-bold text-slate-800 truncate italic">
+                "{replyMood.caption || 'Cảm xúc mới'}"
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClearReplyMood}
+            className="p-1.5 text-slate-400 hover:text-red-500 rounded-lg hover:bg-rose-100/60 transition-colors shrink-0 font-bold text-xs"
+            title="Hủy trả lời"
+          >
+            ✕
+          </button>
         </div>
       )}
 
