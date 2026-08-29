@@ -31,6 +31,7 @@ import {
   MemoryPhoto,
   PlaceFoodItem,
   TodoItem,
+  CustomInteraction,
 } from './types/common.types';
 import { triggerLoveConfetti, triggerCelebration } from './components/ui/ConfettiEffect';
 import { supabase, isSupabaseConfigured } from './services/supabaseClient';
@@ -505,6 +506,30 @@ export function App() {
     });
   };
 
+  const handleTriggerInteraction = (interaction: CustomInteraction) => {
+    triggerLoveConfetti();
+    if (interaction.id === 'kiss') {
+      audio.playKiss();
+    } else if (interaction.id === 'water' || interaction.id === 'medicine') {
+      audio.playReminder();
+    } else {
+      audio.playKiss();
+    }
+    haptic.heartbeat();
+
+    const notifMsg = interaction.notificationMessage || `vừa gửi: ${interaction.label}! 💕`;
+    showToast(`Đã gửi "${interaction.label}" tới ${partner.nickname}! 💕`);
+
+    broadcastCoupleAction({
+      type: interaction.id,
+      senderRole: settings.currentActiveUser,
+      senderName: me.nickname,
+      customText: `${me.nickname} ${notifMsg}`,
+    });
+
+    showSystemNotification(`💕 ${me.nickname}`, `${me.nickname} ${notifMsg}`);
+  };
+
   // Chat Actions
   const handleSendMessage = (msgData: { text?: string; imageUrl?: string; stickerUrl?: string }) => {
     const currentUserId = settings.currentActiveUser === 'husband' ? settings.partner1.id : settings.partner2.id;
@@ -797,6 +822,7 @@ export function App() {
             todos={todos}
             onUpdateMood={handleUpdateMood}
             onNavigateTab={setActiveTab}
+            onTriggerInteraction={handleTriggerInteraction}
             onPokeHeart={handlePokeHeart}
             onSendKiss={handleSendKiss}
             onRemindWater={handleRemindWater}

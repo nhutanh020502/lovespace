@@ -148,3 +148,21 @@ export interface CoupleSettings {
   hapticEnabled: boolean;
   currentActiveUser: UserRole; // 'husband' or 'wife'
 }
+
+export type InteractionColorTheme =
+  | 'rose'
+  | 'pink'
+  | 'purple'
+  | 'blue'
+  | 'cyan'
+  | 'amber'
+  | 'emerald'
+  | 'red';
+
+export interface CustomInteraction {
+  id: string;
+  label: string;
+  emoji: string;
+  colorTheme: InteractionColorTheme;
+  notificationMessage?: string;
+}

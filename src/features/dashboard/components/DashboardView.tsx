@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserRole, UserProfile, MoodStatus, TodoItem, HealthStatus } from '../../../types/common.types';
+import { UserRole, UserProfile, MoodStatus, TodoItem, HealthStatus, CustomInteraction } from '../../../types/common.types';
 import { LoveCounterCard } from './LoveCounterCard';
 import { PartnerStatusHero } from './PartnerStatusHero';
 import { QuickInteractionBar } from './QuickInteractionBar';
@@ -17,6 +17,7 @@ interface DashboardViewProps {
   todos: TodoItem[];
   onUpdateMood: (userId: string, mood: Partial<MoodStatus>) => void;
   onNavigateTab: (tab: any) => void;
+  onTriggerInteraction: (interaction: CustomInteraction) => void;
   onPokeHeart: () => void;
   onSendKiss: () => void;
   onRemindWater: () => void;
@@ -33,14 +34,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   partner2,
   anniversaryDate,
   moodData,
-  healthData,
+  healthData: _healthData,
   todos,
   onUpdateMood,
   onNavigateTab,
+  onTriggerInteraction,
   onPokeHeart,
-  onSendKiss,
-  onRemindWater,
-  onSendHug,
   onToggleTodo,
   onAddTodo,
   onUpdateTodo,
@@ -62,8 +61,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     caption: 'Hôm nay rất vui ❤️',
     updatedAt: new Date().toISOString()
   };
-
-  const partnerHealth = healthData[partner.id];
 
   const [isMoodPickerOpen, setIsMoodPickerOpen] = useState(false);
 
@@ -88,15 +85,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         onQuickPoke={handleQuickPoke}
       />
 
-      {/* 4. Thanh Tương Tác 1 Chạm Nhanh (Thả tim, Hôn, Nhắc nước, Ôm) */}
+      {/* 3. Thanh Tương Tác 1 Chạm Nhanh Tự Do Tùy Chỉnh (Icon, Chữ, Màu sắc, Thêm/Xóa) */}
       <QuickInteractionBar
-        onPokeHeart={handleQuickPoke}
-        onSendKiss={onSendKiss}
-        onRemindWater={onRemindWater}
-        onSendHug={onSendHug}
+        onTriggerInteraction={onTriggerInteraction}
       />
 
-      {/* 5. Việc Cần Làm Chung */}
+      {/* 4. Việc Cần Làm Chung */}
       <TodoSection
         currentRole={currentRole}
         todos={todos}
@@ -106,7 +100,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         onDeleteTodo={onDeleteTodo}
       />
 
-      {/* Modal Đổi Mood & Ảnh Meme của Tôi */}
+      {/* Modal Đổi Mood & Ảnh Cảm Xúc của Tôi */}
       <MoodPickerModal
         isOpen={isMoodPickerOpen}
         onClose={() => setIsMoodPickerOpen(false)}
