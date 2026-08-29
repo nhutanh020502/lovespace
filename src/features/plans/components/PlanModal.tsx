@@ -12,15 +12,6 @@ interface PlanModalProps {
   currentUserId: string;
 }
 
-const TITLE_SUGGESTIONS = [
-  'Kế hoạch ngày 31/8 ⏰',
-  'Hẹn hò cuối tuần ngọt ngào 💕',
-  'Du Lịch Đà Lạt 3N2Đ 🌲🌸',
-  'Chuyến Đi Vũng Tàu Ăn Hải Sản 🌊🦀',
-  'Kỷ niệm ngày yêu 💖',
-  'Ở nhà chill & Nấu ăn cùng nhau 👩‍🍳👨‍🍳',
-];
-
 export const PlanModal: React.FC<PlanModalProps> = ({
   isOpen,
   onClose,
@@ -186,20 +177,6 @@ export const PlanModal: React.FC<PlanModalProps> = ({
             className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-rose-400"
             autoFocus
           />
-
-          {/* Quick Suggestions */}
-          <div className="flex flex-wrap gap-1 mt-1.5">
-            {TITLE_SUGGESTIONS.map((sug, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => setTitle(sug)}
-                className="text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-rose-50 hover:text-rose-600"
-              >
-                {sug}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Ngày diễn ra */}
