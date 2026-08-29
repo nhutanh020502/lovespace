@@ -76,15 +76,12 @@
   10. 📸 **Lưu kỷ niệm mới:** Báo ghi chú khoảnh khắc kỷ niệm mới.
 - Thêm nút kích hoạt nhanh quyền thông báo (Chuông thông minh) trên thanh điều hướng đầu trang (`TopHeader.tsx`).
 
-### 📅 [2026-08-29] - Tinh Chỉnh Full CRUD & Chuẩn Hóa Logic Đổi Mood / Thông Báo
-- **Chuẩn hóa Logic Đổi Tâm Trạng (Mood Picker):**
-  - Tab **"Người Yêu"**: Chỉ hiển thị trạng thái của đối phương, không có nút sửa (vì không thể sửa tâm trạng thay người khác), chỉ có nút tương tác Thả tim & Nhắn tin.
-  - Tab **"Bạn (Tôi)"**: Hiển thị nút **"✨ Đổi Mood Của Bạn"** để cập nhật trạng thái / ảnh meme cá nhân.
-- **Nâng Cấp Nút Chuông Thông Báo Đẩy:**
-  - Bổ sung Toast phản hồi trực quan trên màn hình báo trạng thái Bật/Chặn quyền thông báo.
-  - Thêm đèn báo trạng thái: Xanh (Đã cấp quyền), Vàng (Chưa cấp quyền), Đỏ (Đang bị chặn).
-- **Hoàn Thiện 100% Full CRUD (Thêm, Xóa, SỬA):**
-  - **Việc cần làm (To-Dos):** Thêm modal sửa chi tiết tên, phân loại, người làm, hạn chót.
-  - **Quán ăn & Điểm đến (Places):** Thêm modal chỉnh sửa toàn diện thông tin quán.
-  - **Kho ảnh kỷ niệm (Memory Gallery):** Thêm nút sửa câu chuyện, ngày tháng, địa điểm.
-  - **Toa thuốc (Health Care):** Thêm / Xóa / Nhắc nhở theo từng loại thuốc.
+### 📅 [2026-08-29] - Tích Hợp Hệ Thống Đăng Nhập Bằng SĐT & Ghép Đôi 1-1 (Couple Pairing)
+- **Cơ chế Đăng nhập & Ghép đôi siêu đơn giản bằng Số Điện Thoại:**
+  - Không cần mật khẩu rườm rà hay tài khoản Google.
+  - **Tạo Không Gian Mới:** Nhập SĐT, Tên, Chọn vai trò (Chồng 🐻 / Vợ 🐰) -> Sinh mã ghép đôi 6 ký tự (VD: `LOVE8899`) + nút chia sẻ lời mời qua Zalo.
+  - **Nhập Mã Ghép Đôi:** Người yêu chỉ cần nhập mã 6 ký tự -> Tự động nhận vai trò còn lại và ghép đôi 2 máy thành công.
+  - **Lắng nghe Realtime:** Màn hình chờ tự động nổ pháo hoa và chuyển thẳng vào app ngay khi người yêu nhập mã thành công.
+  - **Khóa phòng 2 người:** Đảm bảo mỗi mối quan hệ chỉ có đúng 2 người, không ai khác vào được.
+  - **Tự động khôi phục:** Nhập lại SĐT đã đăng ký sẽ tự động mở lại đúng Không Gian Yêu cũ.
+  - **Bổ sung nút Đăng Xuất:** Trong cài đặt `SettingsModal.tsx`.
