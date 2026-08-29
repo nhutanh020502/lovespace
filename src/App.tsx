@@ -10,6 +10,7 @@ import { HealthCareView } from './features/health-care/components/HealthCareView
 import { ChatView } from './features/chat/components/ChatView';
 import { PlacesView } from './features/places-food/components/PlacesView';
 import { MemoryGalleryView } from './features/gallery/components/MemoryGalleryView';
+import { DatingPlanView } from './features/plans/components/DatingPlanView';
 import { AuthAndPairingView } from './features/auth/components/AuthAndPairingView';
 import { PWAInstallBanner } from './components/ui/PWAInstallBanner';
 import { RomanticAuroraBackground } from './components/ui/RomanticAuroraBackground';
@@ -23,6 +24,7 @@ import {
   INITIAL_PLACES,
   INITIAL_TODOS,
 } from './constants/initialMockData';
+import { INITIAL_PLANS } from './constants/initialPlans';
 import {
   UserRole,
   MoodStatus,
@@ -33,6 +35,7 @@ import {
   TodoItem,
   CustomInteraction,
 } from './types/common.types';
+import { DatingPlan } from './types/plan.types';
 import { triggerLoveConfetti, triggerCelebration } from './components/ui/ConfettiEffect';
 import { supabase, isSupabaseConfigured } from './services/supabaseClient';
 import {
@@ -57,6 +60,10 @@ import {
   insertMemory,
   updateMemory,
   deleteMemory as deleteMemorySync,
+  fetchPlans,
+  insertPlan,
+  updatePlan,
+  deletePlan as deletePlanSync,
   broadcastCoupleAction,
   setActiveRealtimeChannel,
 } from './services/supabaseSync';
@@ -82,6 +89,7 @@ export function App() {
   const [memories, setMemories] = useLocalStorage<MemoryPhoto[]>('lovespace_memories', INITIAL_MEMORIES);
   const [places, setPlaces] = useLocalStorage<PlaceFoodItem[]>('lovespace_places', INITIAL_PLACES);
   const [todos, setTodos] = useLocalStorage<TodoItem[]>('lovespace_todos', INITIAL_TODOS);
+  const [plans, setPlans] = useLocalStorage<DatingPlan[]>('lovespace_plans', INITIAL_PLANS);
 
   // Active Navigation Tab
   const [activeTab, setActiveTab] = useState<TabType>('home');
@@ -115,13 +123,14 @@ export function App() {
 
     const loadCloudData = async () => {
       try {
-        const [cloudMoods, cloudHealth, cloudMsgs, cloudPlaces, cloudTodos, cloudMems] = await Promise.all([
+        const [cloudMoods, cloudHealth, cloudMsgs, cloudPlaces, cloudTodos, cloudMems, cloudPlans] = await Promise.all([
           fetchMoodStatuses(),
           fetchHealthStatuses(),
           fetchChatMessages(),
           fetchPlaces(),
           fetchTodos(),
           fetchMemories(),
+          fetchPlans(),
         ]);
 
         if (cloudMoods) setMoods(cloudMoods);
@@ -130,6 +139,7 @@ export function App() {
         if (cloudPlaces && cloudPlaces.length > 0) setPlaces(cloudPlaces);
         if (cloudTodos && cloudTodos.length > 0) setTodos(cloudTodos);
         if (cloudMems && cloudMems.length > 0) setMemories(cloudMems);
+        if (cloudPlans && cloudPlans.length > 0) setPlans(cloudPlans);
       } catch (err) {
         console.warn('Lỗi khi tải dữ liệu từ Supabase:', err);
       }
@@ -420,6 +430,70 @@ export function App() {
             setMemories((prev) => prev.filter((m) => m.id !== payload.old.id));
           } else {
             fetchMemories().then((data) => data && setMemories(data));
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'dating_plans' },
+        (payload: any) => {
+          if (payload.eventType === 'INSERT' && payload.new) {
+            const newPlan: DatingPlan = {
+              id: payload.new.id,
+              title: payload.new.title,
+              startDate: payload.new.start_date,
+              endDate: payload.new.end_date,
+              totalDays: payload.new.total_days || 1,
+              timeHeaderNote: payload.new.time_header_note,
+              summaryBudgetNote: payload.new.summary_budget_note,
+              destination: payload.new.destination,
+              coverUrl: payload.new.cover_url,
+              hotelInfo: payload.new.hotel_info || {},
+              transportInfo: payload.new.transport_info,
+              status: payload.new.status || 'upcoming',
+              items: payload.new.items || [],
+              packingList: payload.new.packing_list || [],
+              createdBy: payload.new.created_by,
+              createdAt: payload.new.created_at,
+              updatedAt: payload.new.updated_at,
+            };
+            setPlans((prev) => (prev.some((p) => p.id === newPlan.id) ? prev : [newPlan, ...prev]));
+            if (newPlan.createdBy !== me.id) {
+              audio.playCelebrate();
+              showToast(`${partner.nickname} vừa tạo kế hoạch mới: "${newPlan.title}"! 🗓️✨`);
+              showSystemNotification(
+                '🗓️ Kế Hoạch Mới',
+                `${partner.nickname} vừa tạo: "${newPlan.title}"`
+              );
+            }
+          } else if (payload.eventType === 'UPDATE' && payload.new) {
+            setPlans((prev) =>
+              prev.map((p) =>
+                p.id === payload.new.id
+                  ? {
+                      ...p,
+                      title: payload.new.title,
+                      startDate: payload.new.start_date,
+                      endDate: payload.new.end_date,
+                      totalDays: payload.new.total_days || 1,
+                      timeHeaderNote: payload.new.time_header_note,
+                      summaryBudgetNote: payload.new.summary_budget_note,
+                      destination: payload.new.destination,
+                      coverUrl: payload.new.cover_url,
+                      hotelInfo: payload.new.hotel_info || {},
+                      transportInfo: payload.new.transport_info,
+                      status: payload.new.status || 'upcoming',
+                      items: payload.new.items || [],
+                      packingList: payload.new.packing_list || [],
+                      updatedAt: payload.new.updated_at,
+                    }
+                  : p
+              )
+            );
+          } else if (payload.eventType === 'DELETE' && payload.old) {
+            setPlans((prev) => prev.filter((p) => p.id !== payload.old.id));
+          } else {
+            fetchPlans().then((data) => data && setPlans(data));
           }
         }
       )
@@ -747,6 +821,29 @@ export function App() {
     deleteMemorySync(memId);
   };
 
+  // Plan Actions (Lịch trình hẹn hò & Du lịch dài ngày)
+  const handleAddPlan = (newPlan: DatingPlan) => {
+    setPlans((prev) => [newPlan, ...prev]);
+    audio.playCelebrate();
+    triggerLoveConfetti();
+    showToast(`Đã tạo kế hoạch "${newPlan.title}" thành công! 🗓️✨`);
+    insertPlan(newPlan);
+  };
+
+  const handleUpdatePlan = (updatedPlan: DatingPlan) => {
+    setPlans((prev) =>
+      prev.map((p) => (p.id === updatedPlan.id ? updatedPlan : p))
+    );
+    updatePlan(updatedPlan.id, updatedPlan);
+  };
+
+  const handleDeletePlan = (planId: string) => {
+    setPlans((prev) => prev.filter((p) => p.id !== planId));
+    audio.playPop();
+    showToast('Đã xóa kế hoạch!');
+    deletePlanSync(planId);
+  };
+
   // Nếu chưa đăng nhập / chưa ghép đôi SĐT -> hiển thị màn hình Auth & Ghép Đôi
   if (!authSession) {
     return (
@@ -840,6 +937,16 @@ export function App() {
             onAddTodo={handleAddTodo}
             onUpdateTodo={handleUpdateTodo}
             onDeleteTodo={handleDeleteTodo}
+          />
+        )}
+
+        {activeTab === 'plans' && (
+          <DatingPlanView
+            plans={plans}
+            onAddPlan={handleAddPlan}
+            onUpdatePlan={handleUpdatePlan}
+            onDeletePlan={handleDeletePlan}
+            currentUserId={me.id}
           />
         )}
 

@@ -7,6 +7,7 @@ import {
   TodoItem,
   MemoryPhoto,
 } from '../types/common.types';
+import { DatingPlan } from '../types/plan.types';
 
 // ==============================================================================
 // 1. MOOD STATUS SYNC
@@ -447,7 +448,112 @@ export async function deleteMemory(memoryId: string) {
 }
 
 // ==============================================================================
-// 7. REALTIME INTERACTION BROADCAST (Thả tim, Hôn, Nhắc nước, Ôm, Nhắc thuốc)
+// 7. DATING PLANS SYNC (Kế Hoạch & Lịch Trình Hẹn Hò / Du Lịch)
+// ==============================================================================
+export async function fetchPlans(): Promise<DatingPlan[] | null> {
+  if (!isSupabaseConfigured || !supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from('dating_plans')
+      .select('*')
+      .order('start_date', { ascending: false });
+    if (error || !data) return null;
+    return data.map((row: any) => ({
+      id: row.id,
+      title: row.title,
+      startDate: row.start_date,
+      endDate: row.end_date,
+      totalDays: row.total_days || 1,
+      timeHeaderNote: row.time_header_note,
+      summaryBudgetNote: row.summary_budget_note,
+      destination: row.destination,
+      coverUrl: row.cover_url,
+      hotelInfo: row.hotel_info || {},
+      transportInfo: row.transport_info,
+      status: row.status || 'upcoming',
+      items: row.items || [],
+      packingList: row.packing_list || [],
+      createdBy: row.created_by,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
+  } catch {
+    return null;
+  }
+}
+
+export async function insertPlan(plan: DatingPlan) {
+  if (!isSupabaseConfigured || !supabase) return;
+  try {
+    const payload: any = {
+      title: plan.title,
+      start_date: plan.startDate,
+      end_date: plan.endDate || null,
+      total_days: plan.totalDays || 1,
+      time_header_note: plan.timeHeaderNote || '(tại cục chồng hay đi trễ)',
+      summary_budget_note: plan.summaryBudgetNote || null,
+      destination: plan.destination || null,
+      cover_url: plan.coverUrl || null,
+      hotel_info: plan.hotelInfo || {},
+      transport_info: plan.transportInfo || null,
+      status: plan.status || 'upcoming',
+      items: plan.items || [],
+      packing_list: plan.packingList || [],
+      created_by: plan.createdBy,
+      created_at: plan.createdAt || new Date().toISOString(),
+      updated_at: plan.updatedAt || new Date().toISOString(),
+    };
+    if (plan.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(plan.id)) {
+      payload.id = plan.id;
+    }
+    const { error } = await supabase.from('dating_plans').insert(payload);
+    if (error) console.error('insertPlan error:', error);
+  } catch (err) {
+    console.error('Failed to insert plan:', err);
+  }
+}
+
+export async function updatePlan(planId: string, updated: Partial<DatingPlan>) {
+  if (!isSupabaseConfigured || !supabase) return;
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(planId)) return;
+  try {
+    const payload: any = {
+      updated_at: new Date().toISOString(),
+    };
+    if (updated.title !== undefined) payload.title = updated.title;
+    if (updated.startDate !== undefined) payload.start_date = updated.startDate;
+    if (updated.endDate !== undefined) payload.end_date = updated.endDate || null;
+    if (updated.totalDays !== undefined) payload.total_days = updated.totalDays;
+    if (updated.timeHeaderNote !== undefined) payload.time_header_note = updated.timeHeaderNote;
+    if (updated.summaryBudgetNote !== undefined) payload.summary_budget_note = updated.summaryBudgetNote;
+    if (updated.destination !== undefined) payload.destination = updated.destination;
+    if (updated.coverUrl !== undefined) payload.cover_url = updated.coverUrl;
+    if (updated.hotelInfo !== undefined) payload.hotel_info = updated.hotelInfo;
+    if (updated.transportInfo !== undefined) payload.transport_info = updated.transportInfo;
+    if (updated.status !== undefined) payload.status = updated.status;
+    if (updated.items !== undefined) payload.items = updated.items;
+    if (updated.packingList !== undefined) payload.packing_list = updated.packingList;
+
+    const { error } = await supabase.from('dating_plans').update(payload).eq('id', planId);
+    if (error) console.error('updatePlan error:', error);
+  } catch (err) {
+    console.error('Failed to update plan:', err);
+  }
+}
+
+export async function deletePlan(planId: string) {
+  if (!isSupabaseConfigured || !supabase) return;
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(planId)) return;
+  try {
+    const { error } = await supabase.from('dating_plans').delete().eq('id', planId);
+    if (error) console.error('deletePlan error:', error);
+  } catch (err) {
+    console.error('Failed to delete plan:', err);
+  }
+}
+
+// ==============================================================================
+// 8. REALTIME INTERACTION BROADCAST (Thả tim, Hôn, Nhắc nước, Ôm, Nhắc thuốc)
 // ==============================================================================
 export type CoupleBroadcastType =
   | 'heart'

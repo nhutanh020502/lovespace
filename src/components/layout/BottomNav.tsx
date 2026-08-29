@@ -1,9 +1,9 @@
 import React from 'react';
-import { Home, HeartPulse, MessageCircleHeart, UtensilsCrossed, Images } from 'lucide-react';
+import { Home, HeartPulse, MessageCircleHeart, UtensilsCrossed, Images, CalendarHeart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { clsx } from 'clsx';
 
-export type TabType = 'home' | 'health' | 'chat' | 'places' | 'memories';
+export type TabType = 'home' | 'plans' | 'chat' | 'health' | 'places' | 'memories';
 
 interface BottomNavProps {
   activeTab: TabType;
@@ -18,8 +18,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({
 }) => {
   const navItems = [
     { id: 'home' as TabType, label: 'Trang Chủ', icon: Home },
-    { id: 'health' as TabType, label: 'Sức Khỏe', icon: HeartPulse },
+    { id: 'plans' as TabType, label: 'Kế Hoạch', icon: CalendarHeart },
     { id: 'chat' as TabType, label: 'Nhắn Tin', icon: MessageCircleHeart, badge: unreadCount },
+    { id: 'health' as TabType, label: 'Sức Khỏe', icon: HeartPulse },
     { id: 'places' as TabType, label: 'Ăn Uống', icon: UtensilsCrossed },
     { id: 'memories' as TabType, label: 'Kỷ Niệm', icon: Images },
   ];

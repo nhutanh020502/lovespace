@@ -95,6 +95,27 @@ CREATE TABLE IF NOT EXISTS public.shared_todos (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- 8. Bảng Kế Hoạch & Lịch Trình Hẹn Hò / Du Lịch (Dating Plans)
+CREATE TABLE IF NOT EXISTS public.dating_plans (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  start_date TEXT NOT NULL,
+  end_date TEXT,
+  total_days INTEGER DEFAULT 1,
+  time_header_note TEXT DEFAULT '(tại cục chồng hay đi trễ)',
+  summary_budget_note TEXT,
+  destination TEXT,
+  cover_url TEXT,
+  hotel_info JSONB DEFAULT '{}'::jsonb,
+  transport_info TEXT,
+  status TEXT DEFAULT 'upcoming',
+  items JSONB DEFAULT '[]'::jsonb,
+  packing_list JSONB DEFAULT '[]'::jsonb,
+  created_by TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
 -- ==============================================================================
 -- ⚡ BẬT TÍNH NĂNG SUPABASE REALTIME REPLICATION (Đồng bộ tức thì giữa 2 máy)
 -- ==============================================================================
@@ -104,3 +125,5 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.chat_messages;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.places_food;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.shared_todos;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.memory_gallery;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.dating_plans;
+
