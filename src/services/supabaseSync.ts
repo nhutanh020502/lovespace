@@ -841,8 +841,8 @@ export async function insertVocabTopic(topic: VocabTopic) {
     if (topic.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(topic.id)) {
       payload.id = topic.id;
     }
-    const { error } = await supabase.from('vocab_topics').insert(payload);
-    if (error) console.warn('insertVocabTopic error:', error);
+    const { error } = await supabase.from('vocab_topics').upsert(payload, { onConflict: 'id' });
+    if (error) console.warn('upsertVocabTopic error:', error);
   } catch (err) {
     console.warn('Failed to insert vocab topic:', err);
   }

@@ -206,7 +206,24 @@ export function App() {
         if (cloudTodos && cloudTodos.length > 0) setTodos(cloudTodos);
         if (cloudMems && cloudMems.length > 0) setMemories(cloudMems);
         if (cloudPlans && cloudPlans.length > 0) setPlans(cloudPlans);
-        if (cloudVocabTopics && cloudVocabTopics.length > 0) setVocabTopics(cloudVocabTopics);
+        if (cloudVocabTopics) {
+          if (cloudVocabTopics.length > 0) {
+            const cloudIds = new Set(cloudVocabTopics.map((t) => t.id));
+            const missingFromCloud = vocabTopics.filter((t) => !cloudIds.has(t.id));
+            if (missingFromCloud.length > 0) {
+              for (const missingTopic of missingFromCloud) {
+                insertVocabTopic(missingTopic);
+              }
+              setVocabTopics([...cloudVocabTopics, ...missingFromCloud]);
+            } else {
+              setVocabTopics(cloudVocabTopics);
+            }
+          } else if (vocabTopics.length > 0) {
+            for (const localTopic of vocabTopics) {
+              insertVocabTopic(localTopic);
+            }
+          }
+        }
         if (cloudVocabStreak) setVocabStreak(cloudVocabStreak);
 
         if (cloudCouple) {
