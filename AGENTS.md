@@ -221,8 +221,25 @@
   - Kho 5 gói chủ đề chọn lọc sẵn (Tình yêu, Hẹn hò, Du lịch, Thấu hiểu, Tiếng Anh nâng cao).
 - **📚 Kho Từ Vựng Tích Lũy (Word Bank):**
   - Lưu trữ toàn bộ từ đã học từ các ngày trước, tìm kiếm thông minh và lọc từ đã thuộc / cần ôn lại.
-- **🔄 Đồng Bộ Supabase Realtime & Push Notification:**
-  - Migration `002_vocabulary_schema.sql` với bảng `daily_vocab_sets` và `vocab_streaks`.
-  - Đồng bộ 2 chiều WebSocket tức thì giữa 2 thiết bị.
+### 📅 [2026-09-13] - Tái Cấu Trúc Toàn Diện Module Học Tập (Topic-Driven Architecture & 100% Zero Mock Data)
+- **🚫 Xóa Sạch 100% Dữ Liệu Mẫu Hardcoded:**
+  - Loại bỏ hoàn toàn các gói từ vựng mẫu dựng sẵn (`presetVocabPacks`), không còn bài học mẫu fix cứng.
+  - Toàn bộ chủ đề và từ vựng đều do người dùng tự tạo và sở hữu 100%.
+- **📂 Kiến Trúc Học Tập Theo Chủ Đề (Topic-First Design):**
+  - Người dùng chủ động tạo Chủ Đề trước: chọn Icon/Emoji sinh động, tên chủ đề, mô tả, 6 bảng màu pastel (Hồng, Xanh ngọc, Tím thạch anh, Vàng hổ phách, Xanh emerald, Đỏ hồng), và phần thưởng ngọt ngào khi cả 2 hoàn thành.
+  - Sau khi có chủ đề, tự do thêm từ vựng vào từng chủ đề với 2 chế độ:
+    1. **Thêm từng từ chi tiết:** Từ vựng, loại từ, phát âm IPA, nghĩa tiếng Việt, câu ví dụ, mẹo ghi nhớ.
+    2. **Dán nhanh hàng loạt (Bulk Quick Import):** Dán danh sách dạng `từ : nghĩa : câu ví dụ` để thêm 10-20 từ chỉ trong 1 giây.
+- **🎓 Đa Dạng 3 Chế Độ Học Tập Cặp Đôi Độc Đáo:**
+  1. **🎴 Thẻ Ghi Nhớ 3D (Flashcard):** Hiệu ứng lật thẻ 3D xoay chiều mượt mà, phát âm chuẩn US/UK qua Web Speech API miễn phí.
+  2. **⚡ Trắc Nghiệm Tốc Độ (Mini Quiz):** 4 đáp án xáo trộn, tính điểm, âm thanh sống động và pháo hoa khi đạt điểm tối đa.
+  3. **✍️ Luyện Gõ Chính Tả (Spelling Practice):** Nghe phát âm và gõ lại từ vựng, tự động kiểm tra chính tả kèm nút "Gợi ý chữ cái (Hint)".
+- **🏆 Bảng Thi Đua Chồng 🐻 vs Vợ 🐰 & Nút "Ủn Mông Học Bài 🚀":**
+  - Theo dõi tỷ lệ thuộc từ (%) của từng người trong mỗi chủ đề theo thời gian thực (`masteredBy`).
+  - Nút "Ủn mông học bài 🚀" gửi Push Notification và âm thanh nhắc nhở người yêu.
+- **🔄 Đồng Bộ Supabase Realtime & Cloud Storage:**
+  - Migration mới `supabase/migrations/003_vocab_topics_schema.sql` với bảng `vocab_topics` (JSONB words & topic metadata).
+  - Đồng bộ 2 chiều WebSocket tức thì qua Supabase Realtime giữa Chồng và Vợ.
+
 
 

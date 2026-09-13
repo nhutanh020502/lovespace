@@ -1,4 +1,4 @@
-// Định nghĩa các kiểu dữ liệu cho module Học Từ Vựng Tiếng Anh (LoveVocab)
+// Định nghĩa các kiểu dữ liệu cho module Học Từ Vựng Tiếng Anh Theo Chủ Đề (LoveVocab)
 
 export type WordPartOfSpeech =
   | 'noun'
@@ -8,8 +8,11 @@ export type WordPartOfSpeech =
   | 'phrase'
   | 'idiom';
 
+export type TopicColorTheme = 'rose' | 'pink' | 'purple' | 'blue' | 'amber' | 'emerald';
+
 export interface VocabWord {
   id: string;
+  topicId?: string;
   word: string;
   phonetic?: string; // Ví dụ: /ˈtʃer.ɪʃ/
   partOfSpeech?: WordPartOfSpeech | string; // 'noun', 'verb', 'adjective'...
@@ -18,16 +21,8 @@ export interface VocabWord {
   exampleMeaning?: string; // Nghĩa tiếng Việt của câu ví dụ
   memoryTip?: string; // Mẹo nhớ hoặc liên tưởng vui
   topic?: string;
+  masteredBy?: string[]; // Danh sách userId hoặc role đã thuộc từ này (VD: ['husband', 'wife'])
   createdAt?: string;
-}
-
-export interface PartnerVocabProgress {
-  userId: string;
-  role: 'husband' | 'wife';
-  completedWordIds: string[]; // Danh sách ID từ đã thuộc
-  quizScore?: number; // Điểm trắc nghiệm (0 - 10)
-  isCompleted: boolean; // Đã thuộc đủ 10/10 từ chưa
-  finishedAt?: string;
 }
 
 export interface CoupleReward {
@@ -38,14 +33,13 @@ export interface CoupleReward {
   customNote?: string;
 }
 
-export interface DailyVocabSet {
+export interface VocabTopic {
   id: string;
-  date: string; // YYYY-MM-DD
-  title: string; // "10 Từ Vựng Ngày 13/09" hoặc "Chủ đề: Tình Yêu Lãng Mạn"
-  topic?: string;
+  title: string; // "Tiếng Anh Hẹn Hò & Tình Yêu 💕"
+  description?: string; // "Các từ và mẫu câu ngọt ngào khi đi chơi cùng nhau"
+  emoji: string; // "☕", "✈️", "💬", "💖"
+  colorTheme: TopicColorTheme;
   words: VocabWord[];
-  partner1Progress: PartnerVocabProgress;
-  partner2Progress: PartnerVocabProgress;
   reward?: CoupleReward;
   createdBy?: string;
   createdAt: string;
@@ -56,5 +50,29 @@ export interface VocabStreak {
   currentStreak: number;
   longestStreak: number;
   lastCompletedDate?: string;
-  history?: Record<string, boolean>; // date -> bothCompleted
+  history?: Record<string, boolean>; // date -> completed
+}
+
+// Giữ lại để tương thích ngược nếu cần
+export interface PartnerVocabProgress {
+  userId: string;
+  role: 'husband' | 'wife';
+  completedWordIds: string[];
+  quizScore?: number;
+  isCompleted: boolean;
+  finishedAt?: string;
+}
+
+export interface DailyVocabSet {
+  id: string;
+  date: string;
+  title: string;
+  topic?: string;
+  words: VocabWord[];
+  partner1Progress: PartnerVocabProgress;
+  partner2Progress: PartnerVocabProgress;
+  reward?: CoupleReward;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
 }

@@ -103,6 +103,7 @@ export const WordFormModal: React.FC<WordFormModalProps> = ({
       example: example.trim() || undefined,
       exampleMeaning: exampleMeaning.trim() || undefined,
       memoryTip: memoryTip.trim() || undefined,
+      masteredBy: editingWord?.masteredBy || [],
       createdAt: editingWord?.createdAt || new Date().toISOString()
     };
 

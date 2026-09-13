@@ -8,7 +8,7 @@ import {
   MemoryPhoto,
 } from '../types/common.types';
 import { DatingPlan } from '../types/plan.types';
-import { DailyVocabSet, VocabStreak } from '../types/vocab.types';
+import { VocabTopic, DailyVocabSet, VocabStreak } from '../types/vocab.types';
 
 // ==============================================================================
 // 1. MOOD STATUS SYNC
@@ -797,7 +797,91 @@ export async function joinCoupleSpace(
 }
 
 // ==============================================================================
-// 10. VOCABULARY & DAILY DECK SYNC
+// 10. VOCABULARY TOPICS & WORDS SYNC (Topic-Driven)
+// ==============================================================================
+export async function fetchVocabTopics(): Promise<VocabTopic[] | null> {
+  if (!isSupabaseConfigured || !supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from('vocab_topics')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error || !data) return null;
+    return data.map((row: any) => ({
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      emoji: row.emoji || '📚',
+      colorTheme: row.color_theme || 'rose',
+      words: row.words || [],
+      reward: row.reward || undefined,
+      createdBy: row.created_by,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
+  } catch {
+    return null;
+  }
+}
+
+export async function insertVocabTopic(topic: VocabTopic) {
+  if (!isSupabaseConfigured || !supabase) return;
+  try {
+    const payload: any = {
+      title: topic.title,
+      description: topic.description || null,
+      emoji: topic.emoji || '📚',
+      color_theme: topic.colorTheme || 'rose',
+      words: topic.words || [],
+      reward: topic.reward || null,
+      created_by: topic.createdBy || null,
+      created_at: topic.createdAt || new Date().toISOString(),
+      updated_at: topic.updatedAt || new Date().toISOString(),
+    };
+    if (topic.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(topic.id)) {
+      payload.id = topic.id;
+    }
+    const { error } = await supabase.from('vocab_topics').insert(payload);
+    if (error) console.warn('insertVocabTopic error:', error);
+  } catch (err) {
+    console.warn('Failed to insert vocab topic:', err);
+  }
+}
+
+export async function updateVocabTopic(topicId: string, updated: Partial<VocabTopic>) {
+  if (!isSupabaseConfigured || !supabase) return;
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(topicId)) return;
+  try {
+    const payload: any = {
+      updated_at: new Date().toISOString(),
+    };
+    if (updated.title !== undefined) payload.title = updated.title;
+    if (updated.description !== undefined) payload.description = updated.description;
+    if (updated.emoji !== undefined) payload.emoji = updated.emoji;
+    if (updated.colorTheme !== undefined) payload.color_theme = updated.colorTheme;
+    if (updated.words !== undefined) payload.words = updated.words;
+    if (updated.reward !== undefined) payload.reward = updated.reward;
+
+    const { error } = await supabase.from('vocab_topics').update(payload).eq('id', topicId);
+    if (error) console.warn('updateVocabTopic error:', error);
+  } catch (err) {
+    console.warn('Failed to update vocab topic:', err);
+  }
+}
+
+export async function deleteVocabTopic(topicId: string) {
+  if (!isSupabaseConfigured || !supabase) return;
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(topicId)) return;
+  try {
+    const { error } = await supabase.from('vocab_topics').delete().eq('id', topicId);
+    if (error) console.warn('deleteVocabTopic error:', error);
+  } catch (err) {
+    console.warn('Failed to delete vocab topic:', err);
+  }
+}
+
+// ==============================================================================
+// 10.1 LEGACY DAILY DECK SYNC
 // ==============================================================================
 export async function fetchVocabSets(): Promise<DailyVocabSet[] | null> {
   if (!isSupabaseConfigured || !supabase) return null;

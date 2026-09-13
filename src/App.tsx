@@ -39,7 +39,7 @@ import {
   CustomInteraction,
 } from './types/common.types';
 import { DatingPlan } from './types/plan.types';
-import { DailyVocabSet, VocabStreak } from './types/vocab.types';
+import { VocabTopic, VocabStreak } from './types/vocab.types';
 import { triggerLoveConfetti, triggerCelebration } from './components/ui/ConfettiEffect';
 import { generateUUID } from './utils/uuidUtils';
 import { supabase, isSupabaseConfigured } from './services/supabaseClient';
@@ -69,8 +69,10 @@ import {
   insertPlan,
   updatePlan,
   deletePlan as deletePlanSync,
-  fetchVocabSets,
-  upsertVocabSet,
+  fetchVocabTopics,
+  insertVocabTopic,
+  updateVocabTopic,
+  deleteVocabTopic,
   fetchVocabStreak,
   upsertVocabStreak,
   fetchCoupleById,
@@ -103,7 +105,7 @@ export function App() {
   const [places, setPlaces] = useLocalStorage<PlaceFoodItem[]>('lovespace_places', INITIAL_PLACES);
   const [todos, setTodos] = useLocalStorage<TodoItem[]>('lovespace_todos', INITIAL_TODOS);
   const [plans, setPlans] = useLocalStorage<DatingPlan[]>('lovespace_plans', INITIAL_PLANS);
-  const [vocabSets, setVocabSets] = useLocalStorage<DailyVocabSet[]>('lovespace_vocab_sets', []);
+  const [vocabTopics, setVocabTopics] = useLocalStorage<VocabTopic[]>('lovespace_vocab_topics', []);
   const [vocabStreak, setVocabStreak] = useLocalStorage<VocabStreak>('lovespace_vocab_streak', {
     currentStreak: 0,
     longestStreak: 0,
@@ -158,6 +160,7 @@ export function App() {
     setPlaces((prev) => prev.filter((p) => !mockPlaceIds.includes(p.id)));
     setTodos((prev) => prev.filter((t) => !mockTodoIds.includes(t.id)));
     setPlans((prev) => prev.filter((p) => !mockPlanIds.includes(p.id)));
+    localStorage.removeItem('lovespace_vocab_sets');
 
     // Tự động phát hiện và sửa lỗi trùng avatar giữa Chồng và Vợ do phiên bản cũ gây ra
     if (settings.partner1.avatar && settings.partner2.avatar && settings.partner1.avatar === settings.partner2.avatar) {
@@ -183,7 +186,7 @@ export function App() {
 
     const loadCloudData = async () => {
       try {
-        const [cloudMoods, cloudHealth, cloudMsgs, cloudPlaces, cloudTodos, cloudMems, cloudPlans, cloudVocabSets, cloudVocabStreak, cloudCouple] = await Promise.all([
+        const [cloudMoods, cloudHealth, cloudMsgs, cloudPlaces, cloudTodos, cloudMems, cloudPlans, cloudVocabTopics, cloudVocabStreak, cloudCouple] = await Promise.all([
           fetchMoodStatuses(),
           fetchHealthStatuses(),
           fetchChatMessages(),
@@ -191,7 +194,7 @@ export function App() {
           fetchTodos(),
           fetchMemories(),
           fetchPlans(),
-          fetchVocabSets(),
+          fetchVocabTopics(),
           fetchVocabStreak(authSession?.coupleId),
           authSession?.coupleId ? fetchCoupleById(authSession.coupleId) : Promise.resolve(null),
         ]);
@@ -203,7 +206,7 @@ export function App() {
         if (cloudTodos && cloudTodos.length > 0) setTodos(cloudTodos);
         if (cloudMems && cloudMems.length > 0) setMemories(cloudMems);
         if (cloudPlans && cloudPlans.length > 0) setPlans(cloudPlans);
-        if (cloudVocabSets && cloudVocabSets.length > 0) setVocabSets(cloudVocabSets);
+        if (cloudVocabTopics && cloudVocabTopics.length > 0) setVocabTopics(cloudVocabTopics);
         if (cloudVocabStreak) setVocabStreak(cloudVocabStreak);
 
         if (cloudCouple) {
@@ -656,29 +659,48 @@ export function App() {
       )
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'daily_vocab_sets' },
+        { event: '*', schema: 'public', table: 'vocab_topics' },
         (payload: any) => {
-          if (payload.new && payload.new.date) {
-            const newSet: DailyVocabSet = {
+          if (payload.eventType === 'INSERT' && payload.new) {
+            const newTopic: VocabTopic = {
               id: payload.new.id,
-              date: payload.new.date,
               title: payload.new.title,
-              topic: payload.new.topic,
+              description: payload.new.description,
+              emoji: payload.new.emoji || '📚',
+              colorTheme: payload.new.color_theme || 'rose',
               words: payload.new.words || [],
-              partner1Progress: payload.new.partner1_progress || { completedWordIds: [], isCompleted: false, score: 0 },
-              partner2Progress: payload.new.partner2_progress || { completedWordIds: [], isCompleted: false, score: 0 },
               reward: payload.new.reward || undefined,
               createdBy: payload.new.created_by,
               createdAt: payload.new.created_at,
               updatedAt: payload.new.updated_at,
             };
-            setVocabSets((prev) => {
-              const idx = prev.findIndex((s) => s.date === newSet.date);
-              if (idx >= 0) {
-                return prev.map((s, i) => (i === idx ? newSet : s));
-              }
-              return [newSet, ...prev];
-            });
+            setVocabTopics((prev) => (prev.some((t) => t.id === newTopic.id) ? prev : [newTopic, ...prev]));
+            if (newTopic.createdBy !== me.id) {
+              audio.playCelebrate();
+              showToast(`${partner.nickname} vừa tạo chủ đề mới: "${newTopic.title}"! 📚✨`);
+              showSystemNotification('📚 Chủ Đề Mới', `${partner.nickname} vừa tạo: "${newTopic.title}"`);
+            }
+          } else if (payload.eventType === 'UPDATE' && payload.new) {
+            setVocabTopics((prev) =>
+              prev.map((t) =>
+                t.id === payload.new.id
+                  ? {
+                      ...t,
+                      title: payload.new.title,
+                      description: payload.new.description,
+                      emoji: payload.new.emoji || '📚',
+                      colorTheme: payload.new.color_theme || 'rose',
+                      words: payload.new.words || [],
+                      reward: payload.new.reward || undefined,
+                      updatedAt: payload.new.updated_at,
+                    }
+                  : t
+              )
+            );
+          } else if (payload.eventType === 'DELETE' && payload.old) {
+            setVocabTopics((prev) => prev.filter((t) => t.id !== payload.old.id));
+          } else {
+            fetchVocabTopics().then((data) => data && setVocabTopics(data));
           }
         }
       )
@@ -1022,13 +1044,24 @@ export function App() {
     deletePlanSync(planId);
   };
 
-  // Vocabulary Actions
-  const handleUpdateVocabSets = (newSets: DailyVocabSet[]) => {
-    setVocabSets(newSets);
-    const today = newSets[0];
-    if (today) {
-      upsertVocabSet(today);
-    }
+  // Vocabulary Actions (Topic-Driven)
+  const handleAddVocabTopic = (newTopic: VocabTopic) => {
+    setVocabTopics((prev) => [newTopic, ...prev]);
+    audio.playCelebrate();
+    insertVocabTopic(newTopic);
+  };
+
+  const handleUpdateVocabTopic = (updatedTopic: VocabTopic) => {
+    setVocabTopics((prev) =>
+      prev.map((t) => (t.id === updatedTopic.id ? updatedTopic : t))
+    );
+    updateVocabTopic(updatedTopic.id, updatedTopic);
+  };
+
+  const handleDeleteVocabTopic = (topicId: string) => {
+    setVocabTopics((prev) => prev.filter((t) => t.id !== topicId));
+    audio.playPop();
+    deleteVocabTopic(topicId);
   };
 
   const handleUpdateVocabStreak = (newStreak: VocabStreak) => {
@@ -1268,9 +1301,11 @@ export function App() {
             currentRole={settings.currentActiveUser}
             partner1={settings.partner1}
             partner2={settings.partner2}
-            vocabSets={vocabSets}
+            topics={vocabTopics}
             streak={vocabStreak}
-            onUpdateVocabSets={handleUpdateVocabSets}
+            onAddTopic={handleAddVocabTopic}
+            onUpdateTopic={handleUpdateVocabTopic}
+            onDeleteTopic={handleDeleteVocabTopic}
             onUpdateStreak={handleUpdateVocabStreak}
             onNudgePartner={handleNudgePartnerVocab}
             onShowToast={showToast}
