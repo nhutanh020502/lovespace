@@ -219,3 +219,8 @@
 .safe-top {
   padding-top: max(env(safe-area-inset-top, 16px), 16px);
 }
+
+/* Khoảng đệm cuộn an toàn chuẩn Mobile & Desktop: Nội dung trượt vừa qua thanh menu nổi mới dừng lại */
+.main-scroll-clearance {
+  padding-bottom: calc(88px + max(env(safe-area-inset-bottom, 0px), 16px) + 24px);
+}

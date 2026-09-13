@@ -36,7 +36,7 @@ export const Modal: React.FC<ModalProps> = ({
   };
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 pb-12 sm:pb-6 overflow-hidden">
           {/* Backdrop */}
@@ -44,16 +44,17 @@ export const Modal: React.FC<ModalProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             onClick={onClose}
             className="fixed inset-0 bg-slate-950/60 backdrop-blur-md"
           />
 
           {/* Modal Dialog Card */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.94, y: 16 }}
+            initial={{ opacity: 0, scale: 0.95, y: 14 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.94, y: 16 }}
-            transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+            exit={{ opacity: 0, scale: 0.95, y: 14 }}
+            transition={{ type: 'spring', damping: 30, stiffness: 400 }}
             className={`relative w-full ${maxWClasses[maxWidth]} max-h-[calc(100dvh-56px)] sm:max-h-[88vh] flex flex-col bg-white/95 backdrop-blur-2xl rounded-3xl shadow-2xl border border-rose-200/80 overflow-hidden z-10`}
           >
             {/* Sticky Header */}
@@ -62,13 +63,15 @@ export const Modal: React.FC<ModalProps> = ({
                 <h3 className="text-base sm:text-lg font-black text-slate-800 tracking-tight truncate pr-2">
                   {title}
                 </h3>
-                <button
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  whileHover={{ scale: 1.05 }}
                   onClick={onClose}
                   className="p-1.5 text-slate-400 hover:text-slate-700 rounded-full hover:bg-rose-50 transition-colors shrink-0"
                   title="Đóng modal"
                 >
                   <X className="w-5 h-5" />
-                </button>
+                </motion.button>
               </div>
             )}
 

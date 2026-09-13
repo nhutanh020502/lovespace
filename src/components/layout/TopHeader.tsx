@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Heart, Battery, BellRing, UserCheck, Settings } from 'lucide-react';
 import { UserProfile, UserRole } from '../../types/common.types';
 import { Avatar } from '../ui/Avatar';
@@ -92,7 +93,10 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
         {/* Right: Notification Bell, Settings & Role Toggle */}
         <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
           {/* Nút Bật Thông Báo */}
-          <button
+          <motion.button
+            whileTap={{ scale: 0.93 }}
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
             onClick={handleNotificationClick}
             title={
               notifStatus === 'granted'
@@ -101,7 +105,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
                 ? 'Thông báo đang bị chặn'
                 : 'Bấm để bật thông báo đẩy'
             }
-            className="relative p-1.5 sm:p-2 rounded-full bg-white/90 hover:bg-white text-rose-500 hover:text-rose-600 shadow-sm border border-rose-200 active:scale-95 transition-all"
+            className="relative p-1.5 sm:p-2 rounded-full bg-white/90 hover:bg-white text-rose-500 hover:text-rose-600 shadow-sm border border-rose-200 transition-colors"
           >
             <BellRing className={`w-4 h-4 ${notifStatus !== 'granted' ? 'animate-bounce text-amber-500' : 'animate-pulse text-rose-500'}`} />
             <span
@@ -113,29 +117,35 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
                   : 'bg-amber-400'
               }`}
             />
-          </button>
+          </motion.button>
 
           {/* Nút Cài Đặt Không Gian Yêu */}
           {onOpenSettings && (
-            <button
+            <motion.button
+              whileTap={{ scale: 0.93 }}
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               onClick={onOpenSettings}
               title="Cài đặt không gian yêu"
-              className="p-1.5 sm:p-2 rounded-full bg-white/90 hover:bg-white text-slate-600 hover:text-rose-600 shadow-sm border border-rose-200 active:scale-95 transition-all"
+              className="p-1.5 sm:p-2 rounded-full bg-white/90 hover:bg-white text-slate-600 hover:text-rose-600 shadow-sm border border-rose-200 transition-colors"
             >
               <Settings className="w-4 h-4" />
-            </button>
+            </motion.button>
           )}
 
           {/* Nút Đổi Vai Responsive */}
-          <button
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.02 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
             onClick={() => onSwitchRole(currentRole === 'husband' ? 'wife' : 'husband')}
-            className="flex items-center gap-1 py-1.5 px-2.5 sm:px-3 rounded-full bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold shadow-sm active:scale-95 transition-all"
+            className="flex items-center gap-1 py-1.5 px-2.5 sm:px-3 rounded-full bg-rose-500 hover:bg-rose-600 text-white text-xs font-bold shadow-sm transition-colors"
             title="Bấm để đổi góc nhìn Chồng <-> Vợ"
           >
             <UserCheck className="w-3.5 h-3.5 shrink-0" />
             <span className="hidden sm:inline">Đổi Vai: </span>
             <span>{currentRole === 'husband' ? '🐻 Chồng' : '🐰 Vợ'}</span>
-          </button>
+          </motion.button>
         </div>
       </div>
     </header>

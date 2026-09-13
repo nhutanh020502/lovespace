@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { MemoryPhoto, UserRole } from '../../../types/common.types';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
@@ -34,7 +35,7 @@ interface MemoryGalleryViewProps {
 }
 
 export const MemoryGalleryView: React.FC<MemoryGalleryViewProps> = ({
-  currentRole,
+  currentRole: _currentRole,
   memories,
   onAddMemory,
   onUpdateMemory,
@@ -213,7 +214,7 @@ export const MemoryGalleryView: React.FC<MemoryGalleryViewProps> = ({
   };
 
   return (
-    <div className="space-y-4 pb-20 animate-fade-in">
+    <div className="space-y-4 animate-fade-in">
       {/* Hidden File Inputs for Camera & Gallery */}
       <input
         type="file"
@@ -271,19 +272,26 @@ export const MemoryGalleryView: React.FC<MemoryGalleryViewProps> = ({
         </div>
       </div>
 
-      {/* 2. TAB CHUYỂN ĐỔI: "ẢNH CHUNG KỶ NIỆM" VS "ĐỊA ĐIỂM ĂN CHƠI" */}
-      <div className="flex items-center p-1.5 bg-rose-50/90 rounded-2xl border border-rose-100 shadow-sm">
+      {/* 2. TAB CHUYỂN ĐỔI: "ẢNH CHUNG KỶ NIỆM" VS "ĐỊA ĐIỂM ĂN CHƠI" (M1 - Shared layoutId) */}
+      <div className="flex items-center p-1.5 bg-rose-50/90 rounded-2xl border border-rose-100 shadow-sm relative">
         <button
           onClick={() => {
             setMainTab('couple_photo');
             setSelectedLocation('all');
           }}
-          className={`flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 ${
+          className={`relative flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-black transition-colors flex items-center justify-center gap-2 z-10 ${
             mainTab === 'couple_photo'
-              ? 'bg-rose-500 text-white shadow-md scale-101'
+              ? 'text-white'
               : 'text-slate-600 hover:text-rose-600'
           }`}
         >
+          {mainTab === 'couple_photo' && (
+            <motion.div
+              layoutId="memoryMainTab"
+              className="absolute inset-0 bg-rose-500 rounded-xl shadow-md -z-10"
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            />
+          )}
           <Heart className={`w-4 h-4 ${mainTab === 'couple_photo' ? 'fill-white' : 'text-rose-500'}`} />
           <span>Ảnh Kỷ Niệm Đôi 💕</span>
         </button>
@@ -293,12 +301,19 @@ export const MemoryGalleryView: React.FC<MemoryGalleryViewProps> = ({
             setMainTab('places_dating');
             setSelectedLocation('all');
           }}
-          className={`flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-2 ${
+          className={`relative flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-black transition-colors flex items-center justify-center gap-2 z-10 ${
             mainTab === 'places_dating'
-              ? 'bg-rose-500 text-white shadow-md scale-101'
+              ? 'text-white'
               : 'text-slate-600 hover:text-rose-600'
           }`}
         >
+          {mainTab === 'places_dating' && (
+            <motion.div
+              layoutId="memoryMainTab"
+              className="absolute inset-0 bg-rose-500 rounded-xl shadow-md -z-10"
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            />
+          )}
           <UtensilsCrossed className={`w-4 h-4 ${mainTab === 'places_dating' ? 'text-white' : 'text-amber-500'}`} />
           <span>Điểm Hẹn & Ăn Chơi 🌴</span>
         </button>
@@ -350,19 +365,28 @@ export const MemoryGalleryView: React.FC<MemoryGalleryViewProps> = ({
 
       {/* 4. Grid Danh Sách Ảnh Kỷ Niệm */}
       {filteredMemories.length === 0 ? (
-        <div className="text-center py-12 px-4 rounded-3xl bg-white/60 border border-dashed border-rose-200">
-          <div className="inline-flex p-3 rounded-full bg-rose-100 text-rose-500 mb-2">
-            {mainTab === 'couple_photo' ? <Heart className="w-6 h-6" /> : <MapPin className="w-6 h-6" />}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+          className="text-center py-12 px-4 rounded-3xl bg-white/70 backdrop-blur-md border-2 border-dashed border-rose-200 shadow-sm"
+        >
+          <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-2xl shadow-xs">
+            {mainTab === 'couple_photo' ? '📸' : '🌴'}
           </div>
-          <p className="text-sm font-bold text-slate-700">
+          <p className="text-sm font-black text-slate-800">
             {mainTab === 'couple_photo'
               ? 'Chưa có tấm ảnh kỷ niệm đôi nào!'
-              : 'Chưa có địa điểm ăn chơi check-in nào!'}
+              : 'Chưa có địa điểm check-in nào!'}
           </p>
-          <p className="text-xs text-slate-400 mt-1">
-            Bấm <strong>"Chụp Ảnh Ngay 📸"</strong> để bắt đầu lưu giữ khoảnh khắc nhé!
+          <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto mb-4">
+            Bấm <strong>"Chụp Ảnh Ngay 📸"</strong> để bắt đầu lưu giữ khoảnh khắc ngọt ngào của 2 bạn nhé!
           </p>
-        </div>
+          <Button variant="romantic" size="sm" onClick={handleSnapCamera} className="shadow-glow">
+            <Camera className="w-4 h-4 mr-1.5" />
+            <span>Chụp Tấm Ảnh Đầu Tiên</span>
+          </Button>
+        </motion.div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {filteredMemories.map((mem) => (

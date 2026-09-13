@@ -1,9 +1,9 @@
 import React from 'react';
-import { Home, HeartPulse, MessageCircleHeart, UtensilsCrossed, Images, CalendarHeart } from 'lucide-react';
+import { Home, HeartPulse, MessageCircleHeart, UtensilsCrossed, Images, CalendarHeart, GraduationCap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { clsx } from 'clsx';
 
-export type TabType = 'home' | 'plans' | 'chat' | 'health' | 'places' | 'memories';
+export type TabType = 'home' | 'plans' | 'chat' | 'vocab' | 'health' | 'places' | 'memories';
 
 interface BottomNavProps {
   activeTab: TabType;
@@ -20,24 +20,27 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     { id: 'home' as TabType, label: 'Trang Chủ', icon: Home },
     { id: 'plans' as TabType, label: 'Kế Hoạch', icon: CalendarHeart },
     { id: 'chat' as TabType, label: 'Nhắn Tin', icon: MessageCircleHeart, badge: unreadCount },
+    { id: 'vocab' as TabType, label: 'Học Tập', icon: GraduationCap },
     { id: 'health' as TabType, label: 'Sức Khỏe', icon: HeartPulse },
     { id: 'places' as TabType, label: 'Ăn Uống', icon: UtensilsCrossed },
     { id: 'memories' as TabType, label: 'Kỷ Niệm', icon: Images },
   ];
 
   return (
-    <div className="fixed bottom-3 left-0 right-0 z-40 px-3 pointer-events-none flex justify-center safe-bottom">
-      <nav className="pointer-events-auto floating-dock rounded-full px-2 py-1.5 max-w-md w-full flex items-center justify-around shadow-luxury border border-white/80">
+    <div className="fixed bottom-3 left-0 right-0 z-40 px-2 sm:px-3 pointer-events-none flex justify-center safe-bottom">
+      <nav className="pointer-events-auto floating-dock rounded-full px-1.5 sm:px-2.5 py-1 sm:py-1.5 max-w-lg w-full flex items-center justify-around shadow-luxury border border-white/80">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
 
           return (
-            <button
+            <motion.button
               key={item.id}
+              whileTap={{ scale: 0.94 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               onClick={() => onTabChange(item.id)}
               className={clsx(
-                'relative flex flex-col items-center justify-center py-1.5 px-3 rounded-full transition-all duration-300 cursor-pointer active:scale-90 select-none',
+                'relative flex flex-col items-center justify-center py-1 sm:py-1.5 px-1.5 sm:px-2.5 rounded-full transition-colors cursor-pointer select-none',
                 isActive ? 'text-rose-600 font-extrabold' : 'text-slate-400 hover:text-slate-600 font-semibold'
               )}
             >
@@ -46,7 +49,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                 <motion.div
                   layoutId="activeNavBubble"
                   className="absolute inset-0 bg-gradient-to-tr from-rose-100/90 via-pink-100/80 to-rose-50/90 rounded-full -z-10 shadow-sm border border-rose-200/50"
-                  transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 />
               )}
 
@@ -57,7 +60,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                 >
                   <Icon
                     className={clsx(
-                      'w-5 h-5 transition-colors',
+                      'w-4.5 h-4.5 sm:w-5 sm:h-5 transition-colors',
                       isActive ? 'stroke-[2.5px] text-rose-600 drop-shadow-[0_2px_8px_rgba(244,63,94,0.4)]' : 'text-slate-400'
                     )}
                   />
@@ -70,8 +73,8 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                 ) : null}
               </div>
 
-              <span className="text-[10px] sm:text-[11px] mt-0.5 tracking-tight">{item.label}</span>
-            </button>
+              <span className="text-[9px] sm:text-[10.5px] mt-0.5 tracking-tight">{item.label}</span>
+            </motion.button>
           );
         })}
       </nav>

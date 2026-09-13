@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { PlanTimelineItem, DatingPlan } from '../../../types/plan.types';
+import { generateUUID } from '../../../utils/uuidUtils';
 import { Button } from '../../../components/ui/Button';
 import {
   Edit2,
@@ -128,7 +129,7 @@ export const PlanTableView: React.FC<PlanTableViewProps> = ({
     if (!onUpdatePlanItems) return;
     const lastItem = dayItems[dayItems.length - 1];
     const newItem: PlanTimelineItem = {
-      id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      id: generateUUID(),
       dayIndex: selectedDayIndex,
       timeRange: lastItem ? '19:00 - 20:30' : '09:00 - 10:00',
       activity: 'Đi dạo / Cà phê chill 💕',

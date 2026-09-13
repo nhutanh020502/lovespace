@@ -57,14 +57,17 @@ export const LoveCounterCard: React.FC<LoveCounterCardProps> = ({ startDate }) =
       </div>
 
       {/* Big Number of Days with Heartbeat Pop */}
-      <div
+      <motion.div
+        whileHover={{ scale: 1.04 }}
+        whileTap={{ scale: 0.96 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
         onClick={() => {
           triggerLoveConfetti();
         }}
-        className="flex items-baseline justify-center gap-2.5 my-2 cursor-pointer group/days active:scale-95 transition-transform"
+        className="flex items-baseline justify-center gap-2.5 my-2 cursor-pointer select-none"
         title="Bấm để nổ pháo hoa ăn mừng 💕"
       >
-        <span className="text-6xl sm:text-7xl font-black bg-gradient-to-r from-rose-600 via-pink-600 to-purple-600 bg-clip-text text-transparent tracking-tighter drop-shadow-sm group-hover/days:scale-105 transition-transform duration-300">
+        <span className="text-6xl sm:text-7xl font-black bg-gradient-to-r from-rose-600 via-pink-600 to-purple-600 bg-clip-text text-transparent tracking-tighter drop-shadow-sm">
           {duration.totalDays}
         </span>
         <div className="flex flex-col items-start">
@@ -74,30 +77,42 @@ export const LoveCounterCard: React.FC<LoveCounterCardProps> = ({ startDate }) =
             <span>Yêu thương</span>
           </span>
         </div>
-      </div>
+      </motion.div>
 
       {/* Realtime Clock (Hours, Minutes, Seconds with Spring Number Animation) */}
       <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-4 pt-3 border-t border-rose-200/50 text-center">
-        <div className="bg-white/85 hover:bg-white backdrop-blur-md rounded-2xl py-2 px-1.5 border border-rose-100/90 shadow-sm transition-all">
+        <motion.div
+          whileHover={{ y: -2 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+          className="bg-white/85 hover:bg-white backdrop-blur-md rounded-2xl py-2 px-1.5 border border-rose-100/90 shadow-sm transition-colors"
+        >
           <span className="text-lg sm:text-xl font-black text-slate-800 tracking-tight">
             {String(duration.hours).padStart(2, '0')}
           </span>
           <span className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Giờ</span>
-        </div>
+        </motion.div>
 
-        <div className="bg-white/85 hover:bg-white backdrop-blur-md rounded-2xl py-2 px-1.5 border border-rose-100/90 shadow-sm transition-all">
+        <motion.div
+          whileHover={{ y: -2 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+          className="bg-white/85 hover:bg-white backdrop-blur-md rounded-2xl py-2 px-1.5 border border-rose-100/90 shadow-sm transition-colors"
+        >
           <span className="text-lg sm:text-xl font-black text-slate-800 tracking-tight">
             {String(duration.minutes).padStart(2, '0')}
           </span>
           <span className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Phút</span>
-        </div>
+        </motion.div>
 
-        <div className="bg-white/85 hover:bg-white backdrop-blur-md rounded-2xl py-2 px-1.5 border border-rose-100/90 shadow-sm transition-all">
+        <motion.div
+          whileHover={{ y: -2 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+          className="bg-white/85 hover:bg-white backdrop-blur-md rounded-2xl py-2 px-1.5 border border-rose-100/90 shadow-sm transition-colors"
+        >
           <span className="text-lg sm:text-xl font-black text-rose-600 tracking-tight animate-pulse">
             {String(duration.seconds).padStart(2, '0')}
           </span>
           <span className="block text-[10px] font-extrabold text-rose-400 uppercase tracking-wider">Giây</span>
-        </div>
+        </motion.div>
       </div>
 
       {/* Love Milestone Progress Bar */}
@@ -112,10 +127,11 @@ export const LoveCounterCard: React.FC<LoveCounterCardProps> = ({ startDate }) =
 
         <div className="w-full h-2 rounded-full bg-rose-100/80 overflow-hidden p-0.5 border border-rose-200/50 shadow-inner">
           <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${progressPercent}%` }}
-            transition={{ duration: 1, ease: 'easeOut' }}
-            className="h-full rounded-full bg-gradient-to-r from-rose-500 via-pink-500 to-purple-500 shadow-glow"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: progressPercent / 100 }}
+            style={{ transformOrigin: 'left' }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            className="h-full w-full rounded-full bg-gradient-to-r from-rose-500 via-pink-500 to-purple-500 shadow-glow"
           />
         </div>
       </div>

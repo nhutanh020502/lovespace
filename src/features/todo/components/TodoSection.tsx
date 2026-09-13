@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { TodoItem, UserRole } from '../../../types/common.types';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
@@ -105,75 +106,96 @@ export const TodoSection: React.FC<TodoSectionProps> = ({
       {/* Todo list items */}
       <div className="space-y-2">
         {todos.length === 0 ? (
-          <p className="text-xs text-slate-400 text-center py-3">Chưa có việc nào cần làm.</p>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            className="text-center py-6 px-3 bg-white/50 backdrop-blur-sm rounded-2xl border-2 border-dashed border-rose-200/80"
+          >
+            <span className="text-2xl block mb-1">📝</span>
+            <p className="text-xs font-bold text-slate-700">Chưa có việc nào cần làm chung</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              Bấm "+ Thêm Việc" để cùng nhau lên danh sách việc vặt hoặc kế hoạch nhé!
+            </p>
+          </motion.div>
         ) : (
-          todos.map((item) => (
-            <div
-              key={item.id}
-              className={`group flex items-start gap-3 p-3 rounded-2xl border transition-all ${
-                item.isCompleted
-                  ? 'bg-slate-50/70 border-slate-200/50 opacity-60'
-                  : 'bg-white border-slate-100 shadow-sm hover:border-rose-200'
-              }`}
-            >
-              {/* Checkbox */}
-              <button
-                onClick={() => handleToggle(item.id, item.isCompleted)}
-                className={`mt-0.5 p-1 rounded-lg transition-colors ${
-                  item.isCompleted ? 'text-emerald-500' : 'text-slate-400 hover:text-emerald-600'
+          <AnimatePresence mode="popLayout">
+            {todos.map((item) => (
+              <motion.div
+                key={item.id}
+                layout
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                className={`group flex items-start gap-3 p-3 rounded-2xl border transition-colors ${
+                  item.isCompleted
+                    ? 'bg-slate-50/70 border-slate-200/50 opacity-60'
+                    : 'bg-white border-slate-100 shadow-sm hover:border-rose-200'
                 }`}
               >
-                {item.isCompleted ? (
-                  <CheckCircle2 className="w-5 h-5 fill-emerald-100" />
-                ) : (
-                  <Square className="w-5 h-5" />
-                )}
-              </button>
-
-              {/* Content */}
-              <div className="flex-1 cursor-pointer" onClick={() => handleOpenEdit(item)}>
-                <p
-                  className={`text-xs sm:text-sm font-bold text-slate-800 ${
-                    item.isCompleted ? 'line-through text-slate-400' : ''
+                {/* Checkbox with spring tap */}
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  onClick={() => handleToggle(item.id, item.isCompleted)}
+                  className={`mt-0.5 p-1 rounded-lg transition-colors cursor-pointer ${
+                    item.isCompleted ? 'text-emerald-500' : 'text-slate-400 hover:text-emerald-600'
                   }`}
                 >
-                  {item.title}
-                </p>
-
-                <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-400 mt-1">
-                  <span className="flex items-center gap-1 font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">
-                    <User className="w-3 h-3" />
-                    {item.assignedTo === 'both' ? 'Cả hai' : item.assignedTo === 'husband' ? 'Chồng làm' : 'Vợ làm'}
-                  </span>
-
-                  {item.dueDate && (
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-slate-400" />
-                      Hạn: {formatDateVi(item.dueDate)}
-                    </span>
+                  {item.isCompleted ? (
+                    <CheckCircle2 className="w-5 h-5 fill-emerald-100" />
+                  ) : (
+                    <Square className="w-5 h-5" />
                   )}
-                </div>
-              </div>
+                </motion.button>
 
-              {/* Action Buttons (Edit & Delete) */}
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => handleOpenEdit(item)}
-                  title="Chỉnh sửa việc này"
-                  className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition-colors"
-                >
-                  <Edit3 className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => onDeleteTodo(item.id)}
-                  title="Xóa việc"
-                  className="text-slate-300 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-colors"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-          ))
+                {/* Content */}
+                <div className="flex-1 cursor-pointer" onClick={() => handleOpenEdit(item)}>
+                  <p
+                    className={`text-xs sm:text-sm font-bold text-slate-800 ${
+                      item.isCompleted ? 'line-through text-slate-400' : ''
+                    }`}
+                  >
+                    {item.title}
+                  </p>
+
+                  <div className="flex flex-wrap items-center gap-2 text-[10px] text-slate-400 mt-1">
+                    <span className="flex items-center gap-1 font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">
+                      <User className="w-3 h-3" />
+                      {item.assignedTo === 'both' ? 'Cả hai' : item.assignedTo === 'husband' ? 'Chồng làm' : 'Vợ làm'}
+                    </span>
+
+                    {item.dueDate && (
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-slate-400" />
+                        Hạn: {formatDateVi(item.dueDate)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons (Edit & Delete) */}
+                <div className="flex items-center gap-1">
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => handleOpenEdit(item)}
+                    title="Chỉnh sửa việc này"
+                    className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                  </motion.button>
+                  <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => onDeleteTodo(item.id)}
+                    title="Xóa việc"
+                    className="text-slate-300 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </motion.button>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         )}
       </div>
 

@@ -53,14 +53,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const myMood = moodData[me.id] || {
     userId: me.id,
     mood: 'happy',
-    caption: 'Yêu vợ nhiều lắm ❤️',
+    caption: '',
     updatedAt: new Date().toISOString()
   };
 
   const partnerMood = moodData[partner.id] || {
     userId: partner.id,
     mood: 'happy',
-    caption: 'Hôm nay rất vui ❤️',
+    caption: '',
     updatedAt: new Date().toISOString()
   };
 
@@ -72,7 +72,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   };
 
   return (
-    <div className="space-y-4 pb-20 max-w-2xl mx-auto">
+    <div className="space-y-4 max-w-2xl mx-auto">
       {/* 1. Đồng Hồ Đếm Ngày Yêu Nhau */}
       <LoveCounterCard startDate={anniversaryDate} />
 

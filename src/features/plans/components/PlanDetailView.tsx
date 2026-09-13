@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { DatingPlan, PlanTimelineItem, PackingItem } from '../../../types/plan.types';
+import { generateUUID } from '../../../utils/uuidUtils';
 import { PlanTableView } from './PlanTableView';
 import { PlanTimelineView } from './PlanTimelineView';
 import { PlanItemModal } from './PlanItemModal';
@@ -70,7 +72,7 @@ export const PlanDetailView: React.FC<PlanDetailViewProps> = ({
       );
     } else {
       const newItem: PlanTimelineItem = {
-        id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        id: generateUUID(),
         dayIndex: itemData.dayIndex || selectedDayIndex,
         timeRange: itemData.timeRange || '09:00',
         activity: itemData.activity || '',
@@ -126,7 +128,7 @@ export const PlanDetailView: React.FC<PlanDetailViewProps> = ({
   const totalPackingCount = (plan.packingList || []).length;
 
   return (
-    <div className="space-y-4 pb-20 animate-fade-in">
+    <div className="space-y-4 animate-fade-in">
       {/* 1. Top Navigation Bar & Action Buttons */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-3xl bg-white/80 backdrop-blur-md border border-rose-200/60 shadow-sm">
         <div className="flex items-center gap-2.5 min-w-0">
@@ -287,18 +289,25 @@ export const PlanDetailView: React.FC<PlanDetailViewProps> = ({
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 p-2 bg-white/60 backdrop-blur-md rounded-2xl border border-rose-100">
         {/* Tab Ngày */}
         {plan.totalDays > 1 ? (
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 relative">
             {Array.from({ length: plan.totalDays }, (_, i) => i + 1).map((d) => (
               <button
                 key={d}
                 type="button"
                 onClick={() => setSelectedDayIndex(d)}
-                className={`py-1.5 px-3 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1 ${
+                className={`relative py-1.5 px-3 rounded-xl text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1 z-10 ${
                   selectedDayIndex === d
-                    ? 'bg-rose-500 text-white shadow-sm scale-105'
+                    ? 'text-white'
                     : 'bg-white/80 text-slate-600 hover:bg-rose-50'
                 }`}
               >
+                {selectedDayIndex === d && (
+                  <motion.div
+                    layoutId="planDayTab"
+                    className="absolute inset-0 bg-rose-500 rounded-xl shadow-sm -z-10"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
                 <span>📅 Ngày {d}</span>
                 <span className="text-[10px] opacity-80">
                   ({plan.items.filter((it) => (it.dayIndex || 1) === d).length})
@@ -313,30 +322,44 @@ export const PlanDetailView: React.FC<PlanDetailViewProps> = ({
         )}
 
         {/* Nút đổi Bảng / Timeline */}
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl shrink-0 self-end sm:self-center">
+        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl shrink-0 self-end sm:self-center relative">
           <button
             type="button"
             onClick={() => setViewMode('table')}
-            className={`py-1 px-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+            className={`relative py-1 px-2.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 z-10 ${
               viewMode === 'table'
-                ? 'bg-white text-rose-600 shadow-xs'
+                ? 'text-rose-600'
                 : 'text-slate-500 hover:text-slate-800'
             }`}
             title="Chế độ Bảng chuẩn"
           >
+            {viewMode === 'table' && (
+              <motion.div
+                layoutId="planViewMode"
+                className="absolute inset-0 bg-white rounded-lg shadow-xs -z-10"
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              />
+            )}
             <TableIcon className="w-3.5 h-3.5" />
             <span>Bảng Kế Hoạch</span>
           </button>
           <button
             type="button"
             onClick={() => setViewMode('timeline')}
-            className={`py-1 px-2.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+            className={`relative py-1 px-2.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 z-10 ${
               viewMode === 'timeline'
-                ? 'bg-white text-rose-600 shadow-xs'
+                ? 'text-rose-600'
                 : 'text-slate-500 hover:text-slate-800'
             }`}
             title="Chế độ Dòng thời gian"
           >
+            {viewMode === 'timeline' && (
+              <motion.div
+                layoutId="planViewMode"
+                className="absolute inset-0 bg-white rounded-lg shadow-xs -z-10"
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              />
+            )}
             <Clock className="w-3.5 h-3.5" />
             <span>Dòng Thời Gian</span>
           </button>

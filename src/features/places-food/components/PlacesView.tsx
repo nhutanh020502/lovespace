@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { PlaceFoodItem, UserRole } from '../../../types/common.types';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import { Modal } from '../../../components/ui/Modal';
-import { UtensilsCrossed, Plus, MapPin, ExternalLink, Compass, CheckCircle2, RotateCw, Edit3, Trash2 } from 'lucide-react';
+import { UtensilsCrossed, Plus, MapPin, ExternalLink, Compass, CheckCircle2, RotateCw, Edit3, Trash2, Sparkles } from 'lucide-react';
 import { triggerLoveConfetti } from '../../../components/ui/ConfettiEffect';
 
 interface PlacesViewProps {
@@ -16,7 +17,7 @@ interface PlacesViewProps {
 }
 
 export const PlacesView: React.FC<PlacesViewProps> = ({
-  currentRole,
+  currentRole: _currentRole,
   places,
   onAddPlace,
   onUpdatePlace,
@@ -135,7 +136,7 @@ export const PlacesView: React.FC<PlacesViewProps> = ({
   };
 
   return (
-    <div className="space-y-4 pb-20">
+    <div className="space-y-4 animate-fade-in">
       {/* Top Header & Random Wheel Trigger */}
       <div className="flex items-center justify-between">
         <div>
@@ -160,31 +161,52 @@ export const PlacesView: React.FC<PlacesViewProps> = ({
         </Button>
       </div>
 
-      {/* Filter Tabs (Chưa đi vs Đã trải nghiệm) */}
-      <div className="flex items-center justify-between bg-white/70 p-1 rounded-2xl border border-rose-100 shadow-sm">
-        <div className="flex gap-1">
+      {/* Filter Tabs (Chưa đi vs Đã trải nghiệm) with shared layoutId */}
+      <div className="flex items-center justify-between bg-white/70 backdrop-blur-md p-1 rounded-2xl border border-rose-100 shadow-sm">
+        <div className="flex gap-1 relative">
           <button
             onClick={() => setFilterTab('all')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              filterTab === 'all' ? 'bg-rose-500 text-white shadow-sm' : 'text-slate-600'
+            className={`relative px-3 py-1.5 rounded-xl text-xs font-bold transition-colors z-10 ${
+              filterTab === 'all' ? 'text-white' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
+            {filterTab === 'all' && (
+              <motion.div
+                layoutId="placesFilterTab"
+                className="absolute inset-0 bg-rose-500 rounded-xl shadow-sm -z-10"
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              />
+            )}
             Tất cả ({places.length})
           </button>
           <button
             onClick={() => setFilterTab('unvisited')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              filterTab === 'unvisited' ? 'bg-rose-500 text-white shadow-sm' : 'text-slate-600'
+            className={`relative px-3 py-1.5 rounded-xl text-xs font-bold transition-colors z-10 ${
+              filterTab === 'unvisited' ? 'text-white' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
+            {filterTab === 'unvisited' && (
+              <motion.div
+                layoutId="placesFilterTab"
+                className="absolute inset-0 bg-rose-500 rounded-xl shadow-sm -z-10"
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              />
+            )}
             Chưa đi 📍
           </button>
           <button
             onClick={() => setFilterTab('visited')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              filterTab === 'visited' ? 'bg-rose-500 text-white shadow-sm' : 'text-slate-600'
+            className={`relative px-3 py-1.5 rounded-xl text-xs font-bold transition-colors z-10 ${
+              filterTab === 'visited' ? 'text-white' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
+            {filterTab === 'visited' && (
+              <motion.div
+                layoutId="placesFilterTab"
+                className="absolute inset-0 bg-rose-500 rounded-xl shadow-sm -z-10"
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              />
+            )}
             Đã check-in ✨
           </button>
         </div>
@@ -195,33 +217,50 @@ export const PlacesView: React.FC<PlacesViewProps> = ({
         </Button>
       </div>
 
-      {/* Category Pills */}
+      {/* Category Pills with shared layoutId */}
       <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
         {categories.map((c) => (
           <button
             key={c.id}
             onClick={() => setSelectedCategory(c.id)}
-            className={`px-3 py-1 rounded-full text-xs font-semibold shrink-0 transition-all ${
+            className={`relative px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-colors z-10 ${
               selectedCategory === c.id
-                ? 'bg-rose-500 text-white shadow-sm'
+                ? 'text-white'
                 : 'bg-white/80 text-slate-600 border border-rose-100 hover:bg-rose-50'
             }`}
           >
+            {selectedCategory === c.id && (
+              <motion.div
+                layoutId="placesCategoryTab"
+                className="absolute inset-0 bg-gradient-to-r from-rose-500 to-pink-500 rounded-full shadow-sm -z-10"
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              />
+            )}
             {c.label}
           </button>
         ))}
       </div>
 
-      {/* Place List Cards */}
+      {/* Place List Cards / Clean Empty State */}
       {filteredPlaces.length === 0 ? (
-        <div className="text-center py-12 bg-white/50 rounded-3xl border border-dashed border-rose-200">
-          <UtensilsCrossed className="w-10 h-10 text-rose-300 mx-auto mb-2" />
-          <p className="text-xs font-semibold text-slate-500">Chưa có địa điểm nào trong mục này.</p>
-          <Button size="sm" variant="romantic" onClick={handleOpenAdd} className="mt-3">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+          className="text-center py-12 px-4 bg-white/70 backdrop-blur-md rounded-3xl border-2 border-dashed border-rose-200 shadow-sm"
+        >
+          <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center text-2xl shadow-xs">
+            🍲
+          </div>
+          <h4 className="text-sm font-black text-slate-800 mb-1">Chưa có quán nào trong danh sách</h4>
+          <p className="text-xs text-slate-500 max-w-xs mx-auto mb-4">
+            Lưu lại những quán ăn, tiệm cà phê hoặc quán ăn vặt hai đứa muốn cùng nhau khám phá nhé! 💕
+          </p>
+          <Button size="sm" variant="romantic" onClick={handleOpenAdd} className="shadow-glow">
             <Plus className="w-4 h-4 mr-1" />
-            Thêm Ngay
+            Thêm Quán Đầu Tiên
           </Button>
-        </div>
+        </motion.div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {filteredPlaces.map((place) => (

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { MoodStatus, MoodType } from '../../../types/common.types';
 import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
@@ -284,12 +285,15 @@ export const MoodPickerModal: React.FC<MoodPickerModalProps> = ({
             {moodList.map((opt) => {
               const isSelected = selectedMoodType === opt.type;
               return (
-                <div
+                <motion.div
                   key={opt.type}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   onClick={() => setSelectedMoodType(opt.type)}
-                  className={`group relative flex flex-col items-center justify-center p-2.5 rounded-2xl border transition-all select-none cursor-pointer ${
+                  className={`group relative flex flex-col items-center justify-center p-2.5 rounded-2xl border transition-colors select-none cursor-pointer ${
                     isSelected
-                      ? 'border-rose-500 bg-rose-50 shadow-md scale-102 font-black text-rose-700 ring-2 ring-rose-300'
+                      ? 'border-rose-500 bg-rose-50 shadow-md font-black text-rose-700 ring-2 ring-rose-300'
                       : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:border-rose-200'
                   }`}
                 >
@@ -305,7 +309,7 @@ export const MoodPickerModal: React.FC<MoodPickerModalProps> = ({
 
                   <span className="text-2xl mb-1">{opt.icon}</span>
                   <span className="text-[11px] text-center leading-tight line-clamp-2">{opt.label}</span>
-                </div>
+                </motion.div>
               );
             })}
           </div>
@@ -369,13 +373,16 @@ export const MoodPickerModal: React.FC<MoodPickerModalProps> = ({
               {savedMemes.map((meme) => {
                 const isSelected = photoUrl === meme.url;
                 return (
-                  <div
+                  <motion.div
                     key={meme.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                     onClick={() => setPhotoUrl(isSelected ? '' : meme.url)}
-                    className={`group relative rounded-xl overflow-hidden cursor-pointer border-2 transition-all aspect-square bg-white shadow-xs ${
+                    className={`group relative rounded-xl overflow-hidden cursor-pointer border-2 transition-colors aspect-square bg-white shadow-xs ${
                       isSelected
-                        ? 'border-rose-500 ring-2 ring-rose-300 scale-102 shadow-md'
-                        : 'border-slate-200 hover:border-rose-300 hover:scale-102'
+                        ? 'border-rose-500 ring-2 ring-rose-300 shadow-md'
+                        : 'border-slate-200 hover:border-rose-300'
                     }`}
                   >
                     <img
@@ -402,7 +409,7 @@ export const MoodPickerModal: React.FC<MoodPickerModalProps> = ({
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>

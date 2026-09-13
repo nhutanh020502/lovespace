@@ -3,7 +3,7 @@ import { Card } from '../../../components/ui/Card';
 import { Avatar } from '../../../components/ui/Avatar';
 import { Badge } from '../../../components/ui/Badge';
 import { UserProfile, MoodStatus, MoodReplyContext } from '../../../types/common.types';
-import { formatTimeVi } from '../../../utils/dateUtils';
+import { formatTimeVi, formatMoodUpdateTime } from '../../../utils/dateUtils';
 import { Sparkles, MessageCircle, Heart, User, Users, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -96,27 +96,41 @@ export const PartnerStatusHero: React.FC<PartnerStatusHeroProps> = ({
       />
 
       {/* Segmented Control Switch: Xem của Người yêu vs Xem của Tôi */}
-      <div className="flex items-center justify-between p-1 bg-rose-50/90 rounded-2xl border border-rose-100/80 mb-3 shadow-inner">
+      <div className="flex items-center justify-between p-1 bg-rose-50/90 rounded-2xl border border-rose-100/80 mb-3 shadow-inner relative">
         <button
           onClick={() => setViewRole('partner')}
-          className={`flex-1 py-1.5 px-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+          className={`relative flex-1 py-1.5 px-2.5 rounded-xl text-xs font-black transition-colors flex items-center justify-center gap-1.5 z-10 ${
             viewRole === 'partner'
-              ? 'bg-white text-rose-600 shadow-sm scale-101'
+              ? 'text-rose-600'
               : 'text-slate-500 hover:text-slate-700'
           }`}
         >
+          {viewRole === 'partner' && (
+            <motion.div
+              layoutId="partnerStatusTab"
+              className="absolute inset-0 bg-white rounded-xl shadow-sm border border-rose-200/60 -z-10"
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            />
+          )}
           <Users className="w-3.5 h-3.5" />
           <span className="truncate">{partner.nickname || partner.name}</span>
         </button>
 
         <button
           onClick={() => setViewRole('me')}
-          className={`flex-1 py-1.5 px-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
+          className={`relative flex-1 py-1.5 px-2.5 rounded-xl text-xs font-black transition-colors flex items-center justify-center gap-1.5 z-10 ${
             viewRole === 'me'
-              ? 'bg-white text-rose-600 shadow-sm scale-101'
+              ? 'text-rose-600'
               : 'text-slate-500 hover:text-slate-700'
           }`}
         >
+          {viewRole === 'me' && (
+            <motion.div
+              layoutId="partnerStatusTab"
+              className="absolute inset-0 bg-white rounded-xl shadow-sm border border-rose-200/60 -z-10"
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            />
+          )}
           <User className="w-3.5 h-3.5" />
           <span className="truncate">Bạn ({me.nickname || me.name})</span>
         </button>
@@ -148,7 +162,7 @@ export const PartnerStatusHero: React.FC<PartnerStatusHeroProps> = ({
               </Badge>
             </div>
             <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5">
-              Cập nhật lúc {formatTimeVi(currentDisplayMood.updatedAt)} hôm nay
+              {formatMoodUpdateTime(currentDisplayMood.updatedAt)}
             </p>
           </div>
         </div>
@@ -221,20 +235,50 @@ export const PartnerStatusHero: React.FC<PartnerStatusHeroProps> = ({
             </div>
           </div>
         </motion.div>
-      ) : null}
+      ) : (
+        <motion.div
+          layout
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="my-3 p-3.5 sm:p-4 rounded-2xl bg-rose-50/50 border border-dashed border-rose-200/80 flex items-center gap-3 text-left"
+        >
+          <span className="text-2xl shrink-0 p-2 bg-white rounded-2xl shadow-xs border border-rose-100">
+            {moodConfig.emoji}
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold text-slate-700">
+              {viewRole === 'partner'
+                ? `${partner.nickname || partner.name} đang cảm thấy ${moodConfig.text.toLowerCase()}`
+                : `Bạn đang cảm thấy ${moodConfig.text.toLowerCase()}`}
+            </p>
+            <p className="text-[11px] text-slate-400 mt-0.5">
+              {viewRole === 'me'
+                ? 'Bấm "Đổi Mood" để thêm ảnh meme hoặc lời nhắn yêu thương 💕'
+                : 'Chưa có lời nhắn hay ảnh meme riêng cho hôm nay.'}
+            </p>
+          </div>
+        </motion.div>
+      )}
 
       {/* Footer Quick Actions */}
       <div className="flex items-center gap-2 pt-2.5 border-t border-slate-100">
         {viewRole === 'partner' ? (
           <>
-            <button
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: 1.01 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               onClick={onQuickPoke}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-2xl bg-gradient-to-r from-rose-50 to-pink-50 hover:from-rose-100 hover:to-pink-100 text-rose-600 text-xs font-black active:scale-95 transition-all border border-rose-200/60 shadow-sm"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-2xl bg-gradient-to-r from-rose-50 to-pink-50 hover:from-rose-100 hover:to-pink-100 text-rose-600 text-xs font-black transition-colors border border-rose-200/60 shadow-sm cursor-pointer"
             >
               <Heart className="w-4 h-4 fill-rose-500 text-rose-500 animate-heartbeat" />
               <span>Thả Tim Cho {partner.nickname}</span>
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: 1.01 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               onClick={() => {
                 if (onReplyMood) {
                   onReplyMood({
@@ -247,20 +291,23 @@ export const PartnerStatusHero: React.FC<PartnerStatusHeroProps> = ({
                 }
                 onOpenChat();
               }}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 hover:text-rose-600 text-xs font-black border border-slate-200 active:scale-95 transition-all shadow-sm"
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 hover:text-rose-600 text-xs font-black border border-slate-200 transition-colors shadow-sm cursor-pointer"
             >
               <MessageCircle className="w-4 h-4 text-rose-500" />
               <span>Nhắn Tin Ngay</span>
-            </button>
+            </motion.button>
           </>
         ) : (
-          <button
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: 1.01 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
             onClick={onOpenMoodPicker}
-            className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-400 hover:from-rose-600 hover:to-pink-600 text-white text-xs font-black active:scale-95 transition-all shadow-glow"
+            className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-2xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-400 hover:from-rose-600 hover:to-pink-600 text-white text-xs font-black transition-colors shadow-glow cursor-pointer"
           >
             <Sparkles className="w-4 h-4 animate-spin-slow" />
             <span>Cập Nhật Cảm Xúc & Ảnh Meme Của Bạn 📸✨</span>
-          </button>
+          </motion.button>
         )}
       </div>
     </Card>

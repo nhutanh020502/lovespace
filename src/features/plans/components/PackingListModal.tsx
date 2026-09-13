@@ -3,6 +3,7 @@ import { PackingItem } from '../../../types/plan.types';
 import { Modal } from '../../../components/ui/Modal';
 import { Button } from '../../../components/ui/Button';
 import { CheckSquare, Square, Plus, Trash2, Luggage } from 'lucide-react';
+import { generateUUID } from '../../../utils/uuidUtils';
 
 interface PackingListModalProps {
   isOpen: boolean;
@@ -36,7 +37,7 @@ export const PackingListModal: React.FC<PackingListModalProps> = ({
   const handleAddItem = () => {
     if (!newItemName.trim()) return;
     const newItem: PackingItem = {
-      id: `pack_${Date.now()}`,
+      id: generateUUID(),
       name: newItemName.trim(),
       assignedTo,
       isPacked: false,
@@ -48,7 +49,7 @@ export const PackingListModal: React.FC<PackingListModalProps> = ({
   const handleAddSuggestion = (name: string) => {
     if (packingList.some((p) => p.name === name)) return;
     const newItem: PackingItem = {
-      id: `pack_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      id: generateUUID(),
       name,
       assignedTo: 'both',
       isPacked: false,
@@ -85,8 +86,13 @@ export const PackingListModal: React.FC<PackingListModalProps> = ({
           </div>
           <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-rose-500 to-pink-500 transition-all duration-300 rounded-full"
-              style={{ width: `${progressPercent}%` }}
+              className="h-full bg-gradient-to-r from-rose-500 to-pink-500 rounded-full"
+              style={{
+                width: '100%',
+                transform: `scaleX(${progressPercent / 100})`,
+                transformOrigin: 'left',
+                transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
             />
           </div>
         </div>

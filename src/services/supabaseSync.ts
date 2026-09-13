@@ -8,6 +8,7 @@ import {
   MemoryPhoto,
 } from '../types/common.types';
 import { DatingPlan } from '../types/plan.types';
+import { DailyVocabSet, VocabStreak } from '../types/vocab.types';
 
 // ==============================================================================
 // 1. MOOD STATUS SYNC
@@ -37,17 +38,30 @@ export async function fetchMoodStatuses(): Promise<Record<string, MoodStatus> | 
 export async function upsertMoodStatus(mood: MoodStatus) {
   if (!isSupabaseConfigured || !supabase) return;
   try {
-    await supabase.from('mood_status').upsert(
-      {
-        user_id: mood.userId,
-        mood: mood.mood,
-        caption: mood.caption,
-        photo_url: mood.photoUrl,
-        is_custom_photo: mood.isCustomPhoto || false,
-        updated_at: mood.updatedAt || new Date().toISOString(),
-      },
-      { onConflict: 'user_id' }
-    );
+    const payload = {
+      user_id: mood.userId,
+      mood: mood.mood,
+      caption: mood.caption || null,
+      photo_url: mood.photoUrl || null,
+      is_custom_photo: mood.isCustomPhoto || false,
+      updated_at: mood.updatedAt || new Date().toISOString(),
+    };
+
+    // An toàn kiểm tra bản ghi đã có hay chưa để tránh lỗi ON CONFLICT khi user_id chưa có unique index
+    const { data: existing } = await supabase
+      .from('mood_status')
+      .select('id')
+      .eq('user_id', mood.userId)
+      .limit(1)
+      .maybeSingle();
+
+    if (existing && existing.id) {
+      const { error } = await supabase.from('mood_status').update(payload).eq('id', existing.id);
+      if (error) console.error('update mood_status error:', error);
+    } else {
+      const { error } = await supabase.from('mood_status').insert(payload);
+      if (error) console.error('insert mood_status error:', error);
+    }
   } catch (err) {
     console.error('Failed to sync mood status:', err);
   }
@@ -85,7 +99,7 @@ export async function fetchHealthStatuses(): Promise<Record<string, HealthStatus
 export async function upsertHealthStatus(userId: string, health: HealthStatus) {
   if (!isSupabaseConfigured || !supabase) return;
   try {
-    await supabase.from('health_care').upsert(
+    const { error } = await supabase.from('health_care').upsert(
       {
         user_id: userId,
         illness_name: health.illnessName,
@@ -100,6 +114,7 @@ export async function upsertHealthStatus(userId: string, health: HealthStatus) {
       },
       { onConflict: 'user_id' }
     );
+    if (error) console.error('upsertHealthStatus error:', error);
   } catch (err) {
     console.error('Failed to sync health status:', err);
   }
@@ -778,5 +793,113 @@ export async function joinCoupleSpace(
     return { success: true, couple: data as CoupleRecord };
   } catch (err: any) {
     return { success: false, message: err?.message || 'Lỗi không xác định' };
+  }
+}
+
+// ==============================================================================
+// 10. VOCABULARY & DAILY DECK SYNC
+// ==============================================================================
+export async function fetchVocabSets(): Promise<DailyVocabSet[] | null> {
+  if (!isSupabaseConfigured || !supabase) return null;
+  try {
+    const { data, error } = await supabase
+      .from('daily_vocab_sets')
+      .select('*')
+      .order('date', { ascending: false });
+    if (error || !data) return null;
+    return data.map((row: any) => ({
+      id: row.id,
+      date: row.date,
+      title: row.title,
+      topic: row.topic,
+      words: row.words || [],
+      partner1Progress: row.partner1_progress || { completedWordIds: [], isCompleted: false, score: 0 },
+      partner2Progress: row.partner2_progress || { completedWordIds: [], isCompleted: false, score: 0 },
+      reward: row.reward || undefined,
+      createdBy: row.created_by,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    }));
+  } catch {
+    return null;
+  }
+}
+
+export async function upsertVocabSet(set: DailyVocabSet) {
+  if (!isSupabaseConfigured || !supabase) return;
+  try {
+    const payload: any = {
+      date: set.date,
+      title: set.title,
+      topic: set.topic || null,
+      words: set.words || [],
+      partner1_progress: set.partner1Progress,
+      partner2_progress: set.partner2Progress,
+      reward: set.reward || null,
+      created_by: set.createdBy || null,
+      updated_at: new Date().toISOString(),
+    };
+    if (set.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(set.id)) {
+      payload.id = set.id;
+    }
+
+    const { data: existing } = await supabase
+      .from('daily_vocab_sets')
+      .select('id')
+      .eq('date', set.date)
+      .limit(1);
+
+    if (existing && existing.length > 0) {
+      await supabase.from('daily_vocab_sets').update(payload).eq('id', existing[0].id);
+    } else {
+      payload.created_at = set.createdAt || new Date().toISOString();
+      await supabase.from('daily_vocab_sets').insert(payload);
+    }
+  } catch (err) {
+    console.warn('upsertVocabSet error:', err);
+  }
+}
+
+export async function fetchVocabStreak(coupleId?: string): Promise<VocabStreak | null> {
+  if (!isSupabaseConfigured || !supabase) return null;
+  try {
+    let query = supabase.from('vocab_streaks').select('*');
+    if (coupleId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(coupleId)) {
+      query = query.eq('couple_id', coupleId);
+    }
+    const { data, error } = await query.limit(1);
+    if (error || !data || data.length === 0) return null;
+    const row = data[0];
+    return {
+      currentStreak: row.current_streak || 0,
+      longestStreak: row.longest_streak || 0,
+      lastCompletedDate: row.last_completed_date || undefined,
+      history: row.history || {},
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function upsertVocabStreak(streak: VocabStreak, coupleId?: string) {
+  if (!isSupabaseConfigured || !supabase || !coupleId) return;
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(coupleId)) return;
+  try {
+    const payload = {
+      couple_id: coupleId,
+      current_streak: streak.currentStreak,
+      longest_streak: streak.longestStreak,
+      last_completed_date: streak.lastCompletedDate || null,
+      history: streak.history || {},
+      updated_at: new Date().toISOString(),
+    };
+    const { data: existing } = await supabase.from('vocab_streaks').select('couple_id').eq('couple_id', coupleId).limit(1);
+    if (existing && existing.length > 0) {
+      await supabase.from('vocab_streaks').update(payload).eq('couple_id', coupleId);
+    } else {
+      await supabase.from('vocab_streaks').insert(payload);
+    }
+  } catch (err) {
+    console.warn('upsertVocabStreak error:', err);
   }
 }

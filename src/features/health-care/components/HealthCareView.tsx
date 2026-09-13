@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { HealthStatus, UserRole, UserProfile } from '../../../types/common.types';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
@@ -20,6 +21,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { formatDateVi } from '../../../utils/dateUtils';
+import { generateUUID } from '../../../utils/uuidUtils';
 
 interface HealthCareViewProps {
   currentRole: UserRole;
@@ -85,11 +87,11 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
   // State cho Modal Sửa Chu Kỳ (Vợ)
   const [isPeriodModalOpen, setIsPeriodModalOpen] = useState(false);
   const [lastPeriodDate, setLastPeriodDate] = useState(
-    health.periodTracking?.lastPeriodDate || new Date().toISOString().split('T')[0]
+    health.periodTracking?.lastPeriodDate || ''
   );
   const [cycleDays, setCycleDays] = useState(health.periodTracking?.cycleLengthDays || 28);
   const [periodNotes, setPeriodNotes] = useState(
-    health.periodTracking?.notes || 'Uống nước ấm, chuẩn bị túi chườm và kiên nhẫn hơn vào những ngày nhạy cảm nhé! ❤️'
+    health.periodTracking?.notes || ''
   );
 
   // State cho chỉnh sửa món khoái khẩu
@@ -102,16 +104,10 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
   const [editingHusbandTipIndex, setEditingHusbandTipIndex] = useState<number | null>(null);
   const [editHusbandTipValue, setEditHusbandTipValue] = useState('');
 
-  const defaultHusbandTips = [
-    'Uống đủ nước: Nhắc anh uống đủ 2 lít nước mỗi ngày khi làm việc.',
-    'Giấc ngủ ngon: Nhắc anh không thức quá khuya sau 23h30.',
-    'Tiếp thêm năng lượng: Chuẩn bị một cái ôm ấm áp để tiếp sức cho anh nhé! ❤️',
-  ];
-
   const husbandCareTips: string[] =
     health.periodTracking?.careTips && health.periodTracking.careTips.length > 0
       ? health.periodTracking.careTips
-      : defaultHusbandTips;
+      : [];
 
   // =========================================================================
   // CRUD HANDLERS - 100% CẬP NHẬT TỰ ĐỘNG
@@ -248,9 +244,8 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
             }
           : m
       );
-    } else {
       updatedMeds.push({
-        id: 'med_' + Date.now(),
+        id: generateUUID(),
         name: medName.trim(),
         dosage: medDosage.trim() || '1 liều',
         timeToTake: timesArray,
@@ -327,18 +322,8 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
     setEditHusbandTipValue('');
   };
 
-  const handleResetDefaultHusbandTips = () => {
-    onUpdateHealth(targetUser.id, {
-      periodTracking: {
-        ...(health.periodTracking || { lastPeriodDate: '', cycleLengthDays: 28 }),
-        careTips: defaultHusbandTips,
-      },
-      lastUpdated: new Date().toISOString(),
-    });
-  };
-
   return (
-    <div className="space-y-4 pb-20 animate-fade-in">
+    <div className="space-y-4 animate-fade-in">
       {/* 1. Header Chọn Hồ Sơ & Nút Chuyển Đổi */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-3xl bg-white/80 backdrop-blur-md border border-rose-200/60 shadow-sm">
         <div className="flex items-center gap-2.5">
@@ -355,26 +340,40 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
           </div>
         </div>
 
-        {/* Nút Tab Chuyển đổi Chồng <-> Vợ */}
-        <div className="flex items-center gap-1.5 w-full sm:w-auto p-1 bg-rose-50 rounded-2xl border border-rose-100">
+        {/* Nút Tab Chuyển đổi Chồng <-> Vợ (M1 - Shared layoutId) */}
+        <div className="flex items-center gap-1.5 w-full sm:w-auto p-1 bg-rose-50 rounded-2xl border border-rose-100 relative">
           <button
             onClick={() => setSelectedTargetRole('husband')}
-            className={`flex-1 sm:flex-initial py-1.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+            className={`relative flex-1 sm:flex-initial py-1.5 px-3 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1 z-10 ${
               selectedTargetRole === 'husband'
-                ? 'bg-rose-500 text-white shadow-sm'
+                ? 'text-white'
                 : 'text-slate-600 hover:text-rose-600'
             }`}
           >
+            {selectedTargetRole === 'husband' && (
+              <motion.div
+                layoutId="healthUserTab"
+                className="absolute inset-0 bg-rose-500 rounded-xl shadow-sm -z-10"
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              />
+            )}
             <span>🐻 {partner1.nickname || partner1.name}</span>
           </button>
           <button
             onClick={() => setSelectedTargetRole('wife')}
-            className={`flex-1 sm:flex-initial py-1.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+            className={`relative flex-1 sm:flex-initial py-1.5 px-3 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1 z-10 ${
               selectedTargetRole === 'wife'
-                ? 'bg-rose-500 text-white shadow-sm'
+                ? 'text-white'
                 : 'text-slate-600 hover:text-rose-600'
             }`}
           >
+            {selectedTargetRole === 'wife' && (
+              <motion.div
+                layoutId="healthUserTab"
+                className="absolute inset-0 bg-rose-500 rounded-xl shadow-sm -z-10"
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              />
+            )}
             <span>🐰 {partner2.nickname || partner2.name}</span>
           </button>
         </div>
@@ -858,9 +857,9 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  setLastPeriodDate(health.periodTracking?.lastPeriodDate || new Date().toISOString().split('T')[0]);
+                  setLastPeriodDate(health.periodTracking?.lastPeriodDate || '');
                   setCycleDays(health.periodTracking?.cycleLengthDays || 28);
-                  setPeriodNotes(health.periodTracking?.notes || 'Uống nước ấm, chuẩn bị túi chườm...');
+                  setPeriodNotes(health.periodTracking?.notes || '');
                   setIsPeriodModalOpen(true);
                 }}
                 className="shrink-0"
@@ -875,7 +874,11 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
             <div className="flex items-center justify-between text-xs font-medium">
               <span className="text-slate-600">Lần gần nhất:</span>
               <strong className="text-slate-800">
-                {formatDateVi(health.periodTracking?.lastPeriodDate || '2026-08-15')}
+                {health.periodTracking?.lastPeriodDate ? (
+                  formatDateVi(health.periodTracking.lastPeriodDate)
+                ) : (
+                  <span className="text-slate-400 italic">Chưa ghi nhận ngày</span>
+                )}
               </strong>
             </div>
             <div className="flex items-center justify-between text-xs font-medium pt-1.5 border-t border-pink-200/50">
@@ -887,20 +890,22 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
             <div className="flex items-center justify-between text-xs font-medium pt-1.5 border-t border-pink-200/50">
               <span className="text-slate-600">Dự kiến kỳ tiếp theo:</span>
               <strong className="text-pink-600 font-black">
-                {(() => {
-                  const last = new Date(health.periodTracking?.lastPeriodDate || '2026-08-15');
+                {health.periodTracking?.lastPeriodDate ? (() => {
+                  const last = new Date(health.periodTracking.lastPeriodDate);
                   const days = health.periodTracking?.cycleLengthDays || 28;
                   const next = new Date(last.getTime() + days * 24 * 60 * 60 * 1000);
                   return formatDateVi(next.toISOString().split('T')[0]);
-                })()}
+                })() : (
+                  <span className="text-slate-400 italic font-normal text-[11px]">Cần cập nhật ngày gần nhất</span>
+                )}
               </strong>
             </div>
           </div>
 
           <p className="text-xs text-slate-700 leading-relaxed bg-white/70 p-3 rounded-2xl border border-pink-100">
             💡 <strong>Lời nhắc cho chồng:</strong>{' '}
-            <span className="text-rose-600 font-bold">
-              {health.periodTracking?.notes || 'Chuẩn bị nước ấm, túi chườm, đồ ngọt khoái khẩu và kiên nhẫn hơn vào những ngày nhạy cảm nhé! ❤️'}
+            <span className={health.periodTracking?.notes ? "text-rose-600 font-bold" : "text-slate-400 italic"}>
+              {health.periodTracking?.notes || 'Chưa có lời nhắc riêng. Nhấn "Chỉnh Sửa" để bổ sung lưu ý chăm sóc nhé! 💕'}
             </span>
           </p>
         </Card>
@@ -919,16 +924,6 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
 
             {isOwner && (
               <div className="flex items-center gap-1.5 self-end sm:self-auto">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleResetDefaultHusbandTips}
-                  className="text-xs py-1 px-2.5 text-slate-600 hover:text-blue-600"
-                  title="Khôi phục lời dặn mặc định"
-                >
-                  <RotateCcw className="w-3 h-3 mr-1" />
-                  <span>Mặc định</span>
-                </Button>
                 <Button
                   variant="romantic"
                   size="sm"
@@ -1037,8 +1032,12 @@ export const HealthCareView: React.FC<HealthCareViewProps> = ({
                 </div>
               ))
             ) : (
-              <div className="text-center py-4 text-xs text-slate-400 italic">
-                {isOwner ? 'Chưa có lời dặn nào. Bấm "+ Thêm Lời Dặn" để lưu nhé!' : 'Chưa có lời dặn chăm sóc nào.'}
+              <div className="text-center py-6 px-4 rounded-2xl bg-blue-50/50 border border-dashed border-blue-200">
+                <Sparkles className="w-6 h-6 text-blue-400 mx-auto mb-1.5" />
+                <p className="text-xs font-bold text-slate-600">Chưa có lời dặn dò nào dành cho chồng</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  {isOwner ? 'Nhấn "+ Thêm Lời Dặn" ở trên để ghi chú cách chăm sóc nhé!' : 'Chưa có ghi chú chăm sóc nào.'}
+                </p>
               </div>
             )}
           </div>

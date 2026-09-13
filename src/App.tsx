@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { clsx } from 'clsx';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useAudio } from './hooks/useAudio';
 import { useHaptic } from './hooks/useHaptic';
@@ -11,6 +12,7 @@ import { ChatView } from './features/chat/components/ChatView';
 import { PlacesView } from './features/places-food/components/PlacesView';
 import { MemoryGalleryView } from './features/gallery/components/MemoryGalleryView';
 import { DatingPlanView } from './features/plans/components/DatingPlanView';
+import { VocabularyView } from './features/vocabulary/components/VocabularyView';
 import { AuthAndPairingView } from './features/auth/components/AuthAndPairingView';
 import { PWAInstallBanner } from './components/ui/PWAInstallBanner';
 import { RomanticAuroraBackground } from './components/ui/RomanticAuroraBackground';
@@ -37,7 +39,9 @@ import {
   CustomInteraction,
 } from './types/common.types';
 import { DatingPlan } from './types/plan.types';
+import { DailyVocabSet, VocabStreak } from './types/vocab.types';
 import { triggerLoveConfetti, triggerCelebration } from './components/ui/ConfettiEffect';
+import { generateUUID } from './utils/uuidUtils';
 import { supabase, isSupabaseConfigured } from './services/supabaseClient';
 import {
   fetchMoodStatuses,
@@ -65,6 +69,10 @@ import {
   insertPlan,
   updatePlan,
   deletePlan as deletePlanSync,
+  fetchVocabSets,
+  upsertVocabSet,
+  fetchVocabStreak,
+  upsertVocabStreak,
   fetchCoupleById,
   updateCoupleSettings,
   broadcastCoupleAction,
@@ -95,11 +103,25 @@ export function App() {
   const [places, setPlaces] = useLocalStorage<PlaceFoodItem[]>('lovespace_places', INITIAL_PLACES);
   const [todos, setTodos] = useLocalStorage<TodoItem[]>('lovespace_todos', INITIAL_TODOS);
   const [plans, setPlans] = useLocalStorage<DatingPlan[]>('lovespace_plans', INITIAL_PLANS);
+  const [vocabSets, setVocabSets] = useLocalStorage<DailyVocabSet[]>('lovespace_vocab_sets', []);
+  const [vocabStreak, setVocabStreak] = useLocalStorage<VocabStreak>('lovespace_vocab_streak', {
+    currentStreak: 0,
+    longestStreak: 0,
+    history: {}
+  });
 
-  // Active Navigation Tab
+  // Active Navigation Tab & Unread Chat Counter
   const [activeTab, setActiveTab] = useState<TabType>('home');
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [activeReplyMood, setActiveReplyMood] = useState<MoodReplyContext | null>(null);
+
+  // Tự động xóa unread count khi chuyển sang tab Chat
+  React.useEffect(() => {
+    if (activeTab === 'chat') {
+      setUnreadChatCount(0);
+    }
+  }, [activeTab]);
 
   // Interactive Sound & Haptic
   const audio = useAudio(settings.soundEnabled);
@@ -123,13 +145,45 @@ export function App() {
     });
   }, [settings.currentActiveUser]);
 
+  // Tự động dọn dẹp dữ liệu mẫu cũ nếu còn lưu trong localStorage trình duyệt
+  React.useEffect(() => {
+    const mockMsgIds = ['msg_1', 'msg_2', 'msg_3', 'msg_4'];
+    const mockMemIds = ['mem_1', 'mem_2', 'mem_3'];
+    const mockPlaceIds = ['place_1', 'place_2', 'place_3', 'place_4'];
+    const mockTodoIds = ['todo_1', 'todo_2', 'todo_3'];
+    const mockPlanIds = ['plan_3108'];
+
+    setMessages((prev) => prev.filter((m) => !mockMsgIds.includes(m.id)));
+    setMemories((prev) => prev.filter((m) => !mockMemIds.includes(m.id)));
+    setPlaces((prev) => prev.filter((p) => !mockPlaceIds.includes(p.id)));
+    setTodos((prev) => prev.filter((t) => !mockTodoIds.includes(t.id)));
+    setPlans((prev) => prev.filter((p) => !mockPlanIds.includes(p.id)));
+
+    // Tự động phát hiện và sửa lỗi trùng avatar giữa Chồng và Vợ do phiên bản cũ gây ra
+    if (settings.partner1.avatar && settings.partner2.avatar && settings.partner1.avatar === settings.partner2.avatar) {
+      const healedWifeAvatar = INITIAL_SETTINGS.partner2.avatar;
+      setSettings((prev) => ({
+        ...prev,
+        partner2: {
+          ...prev.partner2,
+          avatar: healedWifeAvatar,
+        },
+      }));
+      if (authSession?.coupleId) {
+        updateCoupleSettings(authSession.coupleId, {
+          partner2_avatar: healedWifeAvatar,
+        });
+      }
+    }
+  }, []);
+
   // 1. Tải dữ liệu ban đầu từ Supabase (nếu có cấu hình)
   React.useEffect(() => {
     if (!isSupabaseConfigured || !supabase) return;
 
     const loadCloudData = async () => {
       try {
-        const [cloudMoods, cloudHealth, cloudMsgs, cloudPlaces, cloudTodos, cloudMems, cloudPlans, cloudCouple] = await Promise.all([
+        const [cloudMoods, cloudHealth, cloudMsgs, cloudPlaces, cloudTodos, cloudMems, cloudPlans, cloudVocabSets, cloudVocabStreak, cloudCouple] = await Promise.all([
           fetchMoodStatuses(),
           fetchHealthStatuses(),
           fetchChatMessages(),
@@ -137,6 +191,8 @@ export function App() {
           fetchTodos(),
           fetchMemories(),
           fetchPlans(),
+          fetchVocabSets(),
+          fetchVocabStreak(authSession?.coupleId),
           authSession?.coupleId ? fetchCoupleById(authSession.coupleId) : Promise.resolve(null),
         ]);
 
@@ -147,24 +203,41 @@ export function App() {
         if (cloudTodos && cloudTodos.length > 0) setTodos(cloudTodos);
         if (cloudMems && cloudMems.length > 0) setMemories(cloudMems);
         if (cloudPlans && cloudPlans.length > 0) setPlans(cloudPlans);
+        if (cloudVocabSets && cloudVocabSets.length > 0) setVocabSets(cloudVocabSets);
+        if (cloudVocabStreak) setVocabStreak(cloudVocabStreak);
 
         if (cloudCouple) {
-          setSettings((prev) => ({
-            ...prev,
-            anniversaryDate: cloudCouple.anniversary_date || prev.anniversaryDate,
-            partner1: {
-              ...prev.partner1,
-              name: cloudCouple.partner1_name || prev.partner1.name,
-              nickname: cloudCouple.partner1_name || prev.partner1.nickname,
-              avatar: cloudCouple.partner1_avatar || prev.partner1.avatar,
-            },
-            partner2: {
-              ...prev.partner2,
-              name: cloudCouple.partner2_name || prev.partner2.name,
-              nickname: cloudCouple.partner2_name || prev.partner2.nickname,
-              avatar: cloudCouple.partner2_avatar || prev.partner2.avatar,
-            },
-          }));
+          const isP1Husband = cloudCouple.partner1_role !== 'wife';
+          const husbandName = isP1Husband ? cloudCouple.partner1_name : cloudCouple.partner2_name;
+          const husbandAvatar = isP1Husband ? cloudCouple.partner1_avatar : cloudCouple.partner2_avatar;
+          const wifeName = isP1Husband ? cloudCouple.partner2_name : cloudCouple.partner1_name;
+          const wifeAvatar = isP1Husband ? cloudCouple.partner2_avatar : cloudCouple.partner1_avatar;
+
+          setSettings((prev) => {
+            const finalHusbandAvatar = husbandAvatar || prev.partner1.avatar;
+            let finalWifeAvatar = wifeAvatar || prev.partner2.avatar;
+            // Tự động tách nếu bị trùng avatar từ phiên bản trước
+            if (finalHusbandAvatar && finalWifeAvatar && finalHusbandAvatar === finalWifeAvatar) {
+              finalWifeAvatar = INITIAL_SETTINGS.partner2.avatar;
+            }
+
+            return {
+              ...prev,
+              anniversaryDate: cloudCouple.anniversary_date || prev.anniversaryDate,
+              partner1: {
+                ...prev.partner1,
+                name: husbandName || prev.partner1.name,
+                nickname: husbandName || prev.partner1.nickname,
+                avatar: finalHusbandAvatar,
+              },
+              partner2: {
+                ...prev.partner2,
+                name: wifeName || prev.partner2.name,
+                nickname: wifeName || prev.partner2.nickname,
+                avatar: finalWifeAvatar,
+              },
+            };
+          });
         }
       } catch (err) {
         console.warn('Lỗi khi tải dữ liệu từ Supabase:', err);
@@ -220,6 +293,19 @@ export function App() {
           haptic.heartbeat();
           showToast(`${payload.senderName} vừa hoàn thành: "${payload.detail}"! 🎉`);
           showSystemNotification('🎉 Hoàn Thành Việc Chung', `${payload.senderName} vừa hoàn thành: "${payload.detail}"!`);
+        } else if (payload.type === 'vocab_nudge') {
+          audio.playReminder();
+          haptic.heartbeat();
+          showToast(`📚 ${payload.senderName} đang chờ bạn cùng học 10 từ vựng hôm nay đó!`);
+          showSystemNotification('📚 Nhắc Học Từ Vựng Cặp Đôi', `${payload.senderName} đang chờ bạn cùng học 10 từ hôm nay nè 💕`);
+        } else {
+          // Xử lý toàn bộ các nút tương tác tự tạo (Custom 1-touch Interactions)
+          triggerLoveConfetti();
+          audio.playKiss();
+          haptic.heartbeat();
+          const customMsg = payload.customText || `${payload.senderName} vừa gửi tương tác yêu thương! 💕`;
+          showToast(customMsg);
+          showSystemNotification(`💕 ${payload.senderName}`, customMsg);
         }
       })
       .on(
@@ -320,6 +406,7 @@ export function App() {
             if (newMsg.senderId !== me.id) {
               audio.playPop();
               haptic.light();
+              setUnreadChatCount((prevCount) => (activeTab !== 'chat' ? prevCount + 1 : 0));
               showSystemNotification(
                 `💬 ${partner.nickname}`,
                 newMsg.text || (newMsg.imageUrl ? '📷 Đã gửi một hình ảnh' : '✨ Đã gửi sticker')
@@ -402,12 +489,15 @@ export function App() {
               completedBy: payload.new.completed_by,
               createdAt: payload.new.created_at,
             };
-            setTodos((prev) => (prev.some((t) => t.id === newTodo.id) ? prev : [newTodo, ...prev]));
-            showToast(`${partner.nickname} vừa thêm việc mới: "${newTodo.title}"! 📝`);
-            showSystemNotification(
-              '📝 Việc Cần Làm Mới',
-              `${partner.nickname} vừa thêm việc: "${newTodo.title}"`
-            );
+            setTodos((prev) => {
+              if (prev.some((t) => t.id === newTodo.id)) return prev;
+              showToast(`${partner.nickname} vừa thêm việc mới: "${newTodo.title}"! 📝`);
+              showSystemNotification(
+                '📝 Việc Cần Làm Mới',
+                `${partner.nickname} vừa thêm việc: "${newTodo.title}"`
+              );
+              return [newTodo, ...prev];
+            });
           } else if (payload.eventType === 'UPDATE' && payload.new) {
             setTodos((prev) =>
               prev.map((t) =>
@@ -530,23 +620,65 @@ export function App() {
         (payload: any) => {
           if (payload.new && authSession && payload.new.id === authSession.coupleId) {
             const cp = payload.new;
-            setSettings((prev) => ({
-              ...prev,
-              anniversaryDate: cp.anniversary_date || prev.anniversaryDate,
-              partner1: {
-                ...prev.partner1,
-                name: cp.partner1_name || prev.partner1.name,
-                nickname: cp.partner1_name || prev.partner1.nickname,
-                avatar: cp.partner1_avatar || prev.partner1.avatar,
-              },
-              partner2: {
-                ...prev.partner2,
-                name: cp.partner2_name || prev.partner2.name,
-                nickname: cp.partner2_name || prev.partner2.nickname,
-                avatar: cp.partner2_avatar || prev.partner2.avatar,
-              },
-            }));
+            const isP1Husband = cp.partner1_role !== 'wife';
+            const husbandName = isP1Husband ? cp.partner1_name : cp.partner2_name;
+            const husbandAvatar = isP1Husband ? cp.partner1_avatar : cp.partner2_avatar;
+            const wifeName = isP1Husband ? cp.partner2_name : cp.partner1_name;
+            const wifeAvatar = isP1Husband ? cp.partner2_avatar : cp.partner1_avatar;
+
+            setSettings((prev) => {
+              const finalHusbandAvatar = husbandAvatar || prev.partner1.avatar;
+              let finalWifeAvatar = wifeAvatar || prev.partner2.avatar;
+              if (finalHusbandAvatar && finalWifeAvatar && finalHusbandAvatar === finalWifeAvatar) {
+                finalWifeAvatar = INITIAL_SETTINGS.partner2.avatar;
+              }
+
+              return {
+                ...prev,
+                anniversaryDate: cp.anniversary_date || prev.anniversaryDate,
+                partner1: {
+                  ...prev.partner1,
+                  name: husbandName || prev.partner1.name,
+                  nickname: husbandName || prev.partner1.nickname,
+                  avatar: finalHusbandAvatar,
+                },
+                partner2: {
+                  ...prev.partner2,
+                  name: wifeName || prev.partner2.name,
+                  nickname: wifeName || prev.partner2.nickname,
+                  avatar: finalWifeAvatar,
+                },
+              };
+            });
             showToast('Cài đặt & ngày yêu vừa được cập nhật từ đối phương! 💕');
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'daily_vocab_sets' },
+        (payload: any) => {
+          if (payload.new && payload.new.date) {
+            const newSet: DailyVocabSet = {
+              id: payload.new.id,
+              date: payload.new.date,
+              title: payload.new.title,
+              topic: payload.new.topic,
+              words: payload.new.words || [],
+              partner1Progress: payload.new.partner1_progress || { completedWordIds: [], isCompleted: false, score: 0 },
+              partner2Progress: payload.new.partner2_progress || { completedWordIds: [], isCompleted: false, score: 0 },
+              reward: payload.new.reward || undefined,
+              createdBy: payload.new.created_by,
+              createdAt: payload.new.created_at,
+              updatedAt: payload.new.updated_at,
+            };
+            setVocabSets((prev) => {
+              const idx = prev.findIndex((s) => s.date === newSet.date);
+              if (idx >= 0) {
+                return prev.map((s, i) => (i === idx ? newSet : s));
+              }
+              return [newSet, ...prev];
+            });
           }
         }
       )
@@ -669,9 +801,7 @@ export function App() {
   // Chat Actions
   const handleSendMessage = (msgData: { text?: string; imageUrl?: string; stickerUrl?: string; replyToMood?: MoodReplyContext }) => {
     const currentUserId = settings.currentActiveUser === 'husband' ? settings.partner1.id : settings.partner2.id;
-    const msgId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-      ? crypto.randomUUID()
-      : 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+    const msgId = generateUUID();
 
     const newMsg: ChatMessage = {
       id: msgId,
@@ -764,9 +894,7 @@ export function App() {
   };
 
   const handleAddTodo = (todo: Omit<TodoItem, 'id' | 'createdAt' | 'isCompleted'>) => {
-    const todoId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-      ? crypto.randomUUID()
-      : 'todo_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+    const todoId = generateUUID();
 
     const newTodo: TodoItem = {
       ...todo,
@@ -796,9 +924,7 @@ export function App() {
 
   // Places Actions
   const handleAddPlace = (place: Omit<PlaceFoodItem, 'id' | 'createdAt' | 'addedBy'>) => {
-    const placeId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-      ? crypto.randomUUID()
-      : 'place_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+    const placeId = generateUUID();
 
     const newPlace: PlaceFoodItem = {
       ...place,
@@ -844,9 +970,7 @@ export function App() {
 
   // Memory Actions
   const handleAddMemory = (memory: Omit<MemoryPhoto, 'id' | 'createdAt' | 'uploadedBy'>) => {
-    const memId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-      ? crypto.randomUUID()
-      : 'mem_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+    const memId = generateUUID();
 
     const newMem: MemoryPhoto = {
       ...memory,
@@ -898,29 +1022,72 @@ export function App() {
     deletePlanSync(planId);
   };
 
+  // Vocabulary Actions
+  const handleUpdateVocabSets = (newSets: DailyVocabSet[]) => {
+    setVocabSets(newSets);
+    const today = newSets[0];
+    if (today) {
+      upsertVocabSet(today);
+    }
+  };
+
+  const handleUpdateVocabStreak = (newStreak: VocabStreak) => {
+    setVocabStreak(newStreak);
+    if (authSession?.coupleId) {
+      upsertVocabStreak(newStreak, authSession.coupleId);
+    }
+  };
+
+  const handleNudgePartnerVocab = () => {
+    broadcastCoupleAction({
+      type: 'vocab_nudge',
+      senderRole: settings.currentActiveUser,
+      senderName: me.nickname,
+      detail: 'Học 10 từ hôm nay',
+    });
+    audio.playReminder();
+    haptic.medium();
+  };
+
   // Nếu chưa đăng nhập / chưa ghép đôi SĐT -> hiển thị màn hình Auth & Ghép Đôi
   if (!authSession) {
     return (
       <AuthAndPairingView
         onAuthSuccess={(session) => {
           setAuthSession(session);
-          setSettings((prev) => ({
-            ...prev,
-            currentActiveUser: session.role,
-            anniversaryDate: session.anniversaryDate || prev.anniversaryDate,
-            partner1: {
-              ...prev.partner1,
-              name: session.role === 'husband' ? session.name : session.partnerName,
-              nickname: session.role === 'husband' ? session.name : session.partnerName,
-              avatar: (session.role === 'husband' ? session.partner1Avatar : session.partner2Avatar) || prev.partner1.avatar,
-            },
-            partner2: {
-              ...prev.partner2,
-              name: session.role === 'wife' ? session.name : session.partnerName,
-              nickname: session.role === 'wife' ? session.name : session.partnerName,
-              avatar: (session.role === 'wife' ? session.partner2Avatar : session.partner1Avatar) || prev.partner2.avatar,
-            },
-          }));
+          setSettings((prev) => {
+            const isSessionHusband = session.role === 'husband';
+            const husbandName = isSessionHusband ? session.name : session.partnerName;
+            const wifeName = isSessionHusband ? session.partnerName : session.name;
+            const husbandAvatar = isSessionHusband
+              ? (session.partner1Avatar || prev.partner1.avatar)
+              : (session.partner2Avatar || prev.partner1.avatar);
+            let wifeAvatar = isSessionHusband
+              ? (session.partner2Avatar || prev.partner2.avatar)
+              : (session.partner1Avatar || prev.partner2.avatar);
+
+            if (husbandAvatar && wifeAvatar && husbandAvatar === wifeAvatar) {
+              wifeAvatar = INITIAL_SETTINGS.partner2.avatar;
+            }
+
+            return {
+              ...prev,
+              currentActiveUser: session.role,
+              anniversaryDate: session.anniversaryDate || prev.anniversaryDate,
+              partner1: {
+                ...prev.partner1,
+                name: husbandName,
+                nickname: husbandName,
+                avatar: husbandAvatar,
+              },
+              partner2: {
+                ...prev.partner2,
+                name: wifeName,
+                nickname: wifeName,
+                avatar: wifeAvatar,
+              },
+            };
+          });
           showToast(`Chào mừng ${session.name} đến với Không Gian Yêu! 💕`);
         }}
       />
@@ -928,7 +1095,12 @@ export function App() {
   }
 
   return (
-    <div className="min-h-screen relative text-slate-800 flex flex-col font-sans selection:bg-rose-200 overflow-x-hidden">
+    <div
+      className={clsx(
+        'relative text-slate-800 flex flex-col font-sans selection:bg-rose-200',
+        activeTab === 'chat' ? 'h-[100dvh] overflow-hidden' : 'min-h-screen overflow-x-hidden'
+      )}
+    >
       {/* Living Ambient Romantic Aurora Background */}
       <RomanticAuroraBackground />
 
@@ -993,9 +1165,16 @@ export function App() {
       />
 
       {/* Main Content Area with Safe Spacing for Floating Dock */}
-      <main className="flex-1 p-3.5 sm:p-5 pb-36 sm:pb-44 max-w-2xl mx-auto w-full relative z-10">
-        {/* Banner Tải & Cài Đặt App Khi Đang Dùng Bản Web */}
-        <PWAInstallBanner />
+      <main
+        className={clsx(
+          'flex-1 max-w-2xl mx-auto w-full relative z-10 transition-all',
+          activeTab === 'chat'
+            ? 'px-2.5 sm:px-4 pb-[76px] flex flex-col min-h-0'
+            : 'px-3.5 pt-3.5 sm:px-5 sm:pt-5 main-scroll-clearance'
+        )}
+      >
+        {/* Banner Tải & Cài Đặt App Khi Đang Dùng Bản Web (Chỉ hiện ở Home để không choán không gian chat) */}
+        {activeTab !== 'chat' && <PWAInstallBanner />}
 
         {activeTab === 'home' && (
           <DashboardView
@@ -1084,6 +1263,20 @@ export function App() {
           />
         )}
 
+        {activeTab === 'vocab' && (
+          <VocabularyView
+            currentRole={settings.currentActiveUser}
+            partner1={settings.partner1}
+            partner2={settings.partner2}
+            vocabSets={vocabSets}
+            streak={vocabStreak}
+            onUpdateVocabSets={handleUpdateVocabSets}
+            onUpdateStreak={handleUpdateVocabStreak}
+            onNudgePartner={handleNudgePartnerVocab}
+            onShowToast={showToast}
+          />
+        )}
+
         {activeTab === 'places' && (
           <PlacesView
             currentRole={settings.currentActiveUser}
@@ -1109,6 +1302,7 @@ export function App() {
       {/* Bottom Navigation */}
       <BottomNav
         activeTab={activeTab}
+        unreadCount={unreadChatCount}
         onTabChange={(tab) => {
           setActiveTab(tab);
           audio.playPop();

@@ -219,10 +219,11 @@ export const QuickInteractionBar: React.FC<QuickInteractionBarProps> = ({
           return (
             <motion.button
               key={item.id}
-              whileHover={{ y: -3, scale: 1.03 }}
-              whileTap={{ scale: 0.9 }}
+              whileHover={{ y: -3, scale: 1.02 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               onClick={() => onTriggerInteraction(item)}
-              className={`flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-2xl sm:rounded-3xl border bg-gradient-to-b shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer ${theme.btnClass}`}
+              className={`flex flex-col items-center justify-center p-2 sm:p-2.5 rounded-2xl sm:rounded-3xl border bg-gradient-to-b shadow-sm hover:shadow-md cursor-pointer ${theme.btnClass}`}
             >
               <div className="p-1 sm:p-1.5 rounded-xl bg-white/90 backdrop-blur-sm shadow-sm mb-1 text-base sm:text-xl select-none">
                 {item.emoji}

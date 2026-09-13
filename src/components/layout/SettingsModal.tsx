@@ -3,9 +3,10 @@ import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Avatar } from '../ui/Avatar';
 import { CoupleSettings } from '../../types/common.types';
-import { Settings, Heart, Calendar, Volume2, VolumeX, Smartphone, Camera, Loader2, BellRing } from 'lucide-react';
+import { Settings, Heart, Calendar, Volume2, VolumeX, Smartphone, Camera, Loader2, BellRing, RefreshCw } from 'lucide-react';
 import { uploadImageToCloudinary } from '../../services/cloudinaryService';
 import { requestNotificationPermission, showSystemNotification } from '../../services/notificationService';
+import { INITIAL_SETTINGS } from '../../constants/initialMockData';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -90,6 +91,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <span>Biệt danh & Ảnh đại diện</span>
           </h4>
 
+          {partner1Avatar === partner2Avatar && (
+            <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-800 flex items-center justify-between gap-2">
+              <span>⚠️ Ảnh 2 người đang bị trùng nhau.</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setPartner1Avatar(INITIAL_SETTINGS.partner1.avatar);
+                  setPartner2Avatar(INITIAL_SETTINGS.partner2.avatar);
+                }}
+                className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-[10px] transition shrink-0"
+              >
+                Tách ảnh gốc ngay
+              </button>
+            </div>
+          )}
+
           {/* Chồng */}
           <div className="flex items-center gap-3 bg-white p-2.5 rounded-xl border border-rose-100 shadow-sm">
             <div className="relative group">
@@ -98,6 +115,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onClick={() => husbandFileRef.current?.click()}
                 disabled={uploadingRole === 'husband'}
                 className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Tải ảnh mới"
               >
                 {uploadingRole === 'husband' ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -114,7 +132,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               />
             </div>
             <div className="flex-1">
-              <label className="block text-[11px] font-bold text-slate-500 mb-0.5">Biệt danh Chồng:</label>
+              <div className="flex items-center justify-between mb-0.5">
+                <label className="block text-[11px] font-bold text-slate-500">Biệt danh Chồng:</label>
+                <button
+                  type="button"
+                  onClick={() => setPartner1Avatar(INITIAL_SETTINGS.partner1.avatar)}
+                  className="text-[10px] text-rose-500 hover:text-rose-600 font-medium hover:underline"
+                >
+                  Ảnh gốc
+                </button>
+              </div>
               <input
                 type="text"
                 value={partner1Nick}
@@ -133,6 +160,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 onClick={() => wifeFileRef.current?.click()}
                 disabled={uploadingRole === 'wife'}
                 className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Tải ảnh mới"
               >
                 {uploadingRole === 'wife' ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -149,7 +177,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               />
             </div>
             <div className="flex-1">
-              <label className="block text-[11px] font-bold text-slate-500 mb-0.5">Biệt danh Vợ:</label>
+              <div className="flex items-center justify-between mb-0.5">
+                <label className="block text-[11px] font-bold text-slate-500">Biệt danh Vợ:</label>
+                <button
+                  type="button"
+                  onClick={() => setPartner2Avatar(INITIAL_SETTINGS.partner2.avatar)}
+                  className="text-[10px] text-rose-500 hover:text-rose-600 font-medium hover:underline"
+                >
+                  Ảnh gốc
+                </button>
+              </div>
               <input
                 type="text"
                 value={partner2Nick}

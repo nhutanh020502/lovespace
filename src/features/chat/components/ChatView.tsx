@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ChatMessage, UserRole, UserProfile, MoodReplyContext } from '../../../types/common.types';
 import { Avatar } from '../../../components/ui/Avatar';
 import { Lightbox } from '../../../components/ui/Lightbox';
@@ -54,19 +55,32 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [selectedPhotoUrl, setSelectedPhotoUrl] = useState<string | null>(null);
 
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const pinnedMessage = messages.find((m) => m.isPinned);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = (smooth = true) => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: smooth ? 'smooth' : 'auto',
+      });
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    const timer = setTimeout(() => {
+      scrollToBottom(false);
+    }, 60);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom(true);
+  }, [messages.length]);
 
   const handleSend = () => {
     if (!inputText.trim()) return;
@@ -129,7 +143,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const reactionEmojis = ['❤️', '💋', '🥺', '😆', '😡'];
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] pb-14 sm:pb-16 max-w-2xl mx-auto">
+    <div className="flex flex-col flex-1 min-h-0 w-full">
       {/* Hidden File Inputs for Device Gallery & Instant Camera */}
       <input
         type="file"
@@ -148,7 +162,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       />
 
       {/* Header Info */}
-      <div className="glass-panel p-3 rounded-2xl flex items-center justify-between mb-2 shadow-sm">
+      <div className="glass-panel p-2.5 sm:p-3 rounded-2xl flex items-center justify-between mb-2 shadow-xs shrink-0 border border-rose-200/60">
         <div className="flex items-center gap-2.5">
           <Avatar src={partner.avatar} alt={partner.name} size="sm" isOnline={partner.isOnline} />
           <div>
@@ -160,7 +174,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
           </div>
         </div>
 
-        <div className="text-[11px] font-semibold text-rose-500 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-100 flex items-center gap-1">
+        <div className="text-[11px] font-semibold text-rose-500 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-100 flex items-center gap-1 shrink-0">
           <Heart className="w-3 h-3 fill-rose-500" />
           <span>Chỉ 2 đứa mình 💕</span>
         </div>
@@ -168,14 +182,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
       {/* Pinned Message Bar (if any) */}
       {pinnedMessage && (
-        <div className="flex items-center justify-between px-3 py-1.5 bg-rose-100/80 backdrop-blur-sm rounded-xl border border-rose-200 text-xs text-rose-800 mb-2 shadow-sm animate-fade-in">
+        <div className="flex items-center justify-between px-3 py-1.5 bg-rose-100/80 backdrop-blur-sm rounded-xl border border-rose-200 text-xs text-rose-800 mb-2 shadow-sm animate-fade-in shrink-0">
           <div className="flex items-center gap-2 truncate">
             <Pin className="w-3.5 h-3.5 text-rose-600 shrink-0 fill-rose-600" />
             <span className="truncate font-medium">Ghim: {pinnedMessage.text || 'Ảnh kỷ niệm'}</span>
           </div>
           <button
             onClick={() => onTogglePin(pinnedMessage.id)}
-            className="text-[10px] font-bold text-rose-600 hover:text-rose-800 shrink-0 ml-2"
+            className="text-[10px] font-bold text-rose-600 hover:text-rose-800 shrink-0 ml-2 cursor-pointer"
           >
             Bỏ ghim
           </button>
@@ -183,19 +197,33 @@ export const ChatView: React.FC<ChatViewProps> = ({
       )}
 
       {/* Messages Scroll Area */}
-      <div className="flex-1 overflow-y-auto space-y-3 px-1 py-2">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto space-y-3 px-1 py-2 min-h-0 overscroll-contain">
         {messages.length === 0 && (
-          <div className="text-center py-12 text-slate-400 text-xs font-medium">
-            Chưa có tin nhắn nào. Hãy gửi lời yêu thương đầu tiên nhé! 💕
-          </div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            className="text-center py-14 px-4 my-auto"
+          >
+            <div className="w-16 h-16 mx-auto mb-3 rounded-3xl bg-rose-50 border border-rose-100/80 flex items-center justify-center text-3xl shadow-sm">
+              💌
+            </div>
+            <h4 className="text-sm font-black text-slate-800 mb-1">Không Gian Trò Chuyện Riêng Tư</h4>
+            <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
+              Nơi chỉ có hai đứa mình. Hãy nhắn gửi những lời yêu thương, chia sẻ niềm vui và gửi ảnh ngọt ngào cho nhau nhé! 💕
+            </p>
+          </motion.div>
         )}
 
         {messages.map((msg) => {
           const isMe = msg.senderId === me.id;
 
           return (
-            <div
+            <motion.div
               key={msg.id}
+              initial={{ opacity: 0, y: 8, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               className={`flex items-end gap-2 group ${isMe ? 'justify-end' : 'justify-start'}`}
             >
               {/* Partner Avatar */}
@@ -311,14 +339,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   ))}
                   <button
                     onClick={() => onTogglePin(msg.id)}
-                    className="text-slate-400 hover:text-rose-500 pl-1 border-l border-slate-200"
+                    className="text-slate-400 hover:text-rose-500 pl-1 border-l border-slate-200 cursor-pointer"
                     title="Ghim tin nhắn"
                   >
                     <Pin className="w-3 h-3" />
                   </button>
                 </div>
               </div>
-            </div>
+            </motion.div>
           );
         })}
 
@@ -337,7 +365,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
       {/* Quick Romantic Emoji Picker Popup */}
       {showEmojiPicker && (
-        <div className="glass-panel p-2 rounded-2xl mb-2 border border-rose-200 shadow-xl animate-fade-in">
+        <div className="glass-panel p-2 rounded-2xl mb-2 border border-rose-200 shadow-xl animate-fade-in shrink-0 max-h-48 overflow-y-auto">
           <div className="text-[11px] font-bold text-slate-500 mb-1.5 px-1 flex items-center justify-between">
             <span>Kho biểu tượng cảm xúc (200+ icon):</span>
             <button
@@ -358,7 +386,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
       {/* Reply To Mood Banner */}
       {replyMood && (
-        <div className="mb-2 p-2.5 bg-rose-50/95 backdrop-blur-md rounded-2xl border border-rose-200 shadow-sm flex items-center justify-between gap-2 animate-fade-in">
+        <div className="mb-2 p-2.5 bg-rose-50/95 backdrop-blur-md rounded-2xl border border-rose-200 shadow-sm flex items-center justify-between gap-2 animate-fade-in shrink-0">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
             {replyMood.photoUrl ? (
               <img
@@ -392,7 +420,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
       )}
 
       {/* Input Bar with Direct Device Upload & Instant Camera */}
-      <div className="glass-panel p-2 rounded-2xl flex items-center gap-1.5 border border-rose-200/80 shadow-md">
+      <div className="glass-panel p-2 rounded-2xl flex items-center gap-1.5 border border-rose-200/80 shadow-md shrink-0 mb-1 bg-white/95 backdrop-blur-md">
         {/* Nút Chọn Ảnh từ Thư Viện Máy */}
         <button
           onClick={() => galleryInputRef.current?.click()}
@@ -437,13 +465,16 @@ export const ChatView: React.FC<ChatViewProps> = ({
         />
 
         {/* Send Button */}
-        <button
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          whileHover={{ scale: 1.05 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
           onClick={handleSend}
           disabled={!inputText.trim()}
-          className="p-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white disabled:opacity-40 disabled:pointer-events-none hover:shadow-md hover:shadow-rose-200 active:scale-95 transition-all"
+          className="p-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white disabled:opacity-40 disabled:pointer-events-none hover:shadow-md hover:shadow-rose-200 transition-shadow cursor-pointer"
         >
           <Send className="w-4 h-4" />
-        </button>
+        </motion.button>
       </div>
 
       {/* Lightbox Zoom Photo */}

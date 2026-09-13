@@ -1,4 +1,4 @@
-import { format, differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds } from 'date-fns';
+import { format, differenceInDays, differenceInHours, differenceInMinutes, differenceInSeconds, isToday, isYesterday } from 'date-fns';
 import { vi } from 'date-fns/locale';
 
 export interface LoveDuration {
@@ -53,5 +53,44 @@ export function formatTimeVi(dateStr: string | Date): string {
     return format(d, 'HH:mm', { locale: vi });
   } catch {
     return '';
+  }
+}
+
+export function formatMoodUpdateTime(dateStr?: string | Date | null): string {
+  if (!dateStr) return 'Vừa cập nhật';
+  try {
+    const d = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
+    if (isNaN(d.getTime())) return 'Vừa cập nhật';
+
+    const now = new Date();
+    const diffMinutes = differenceInMinutes(now, d);
+
+    if (diffMinutes < 1) {
+      return 'Vừa mới cập nhật';
+    }
+    if (diffMinutes < 60) {
+      return `Cập nhật ${diffMinutes} phút trước`;
+    }
+
+    const timeStr = format(d, 'HH:mm', { locale: vi });
+
+    if (isToday(d)) {
+      return `Cập nhật lúc ${timeStr} hôm nay`;
+    }
+
+    if (isYesterday(d)) {
+      return `Cập nhật lúc ${timeStr} hôm qua`;
+    }
+
+    const diffDays = differenceInDays(now, d);
+    if (diffDays <= 7) {
+      return `Cập nhật lúc ${timeStr} (${diffDays} ngày trước)`;
+    }
+
+    const isSameYear = d.getFullYear() === now.getFullYear();
+    const dateFormatted = format(d, isSameYear ? 'dd/MM' : 'dd/MM/yyyy', { locale: vi });
+    return `Cập nhật ngày ${dateFormatted} lúc ${timeStr}`;
+  } catch {
+    return 'Vừa cập nhật';
   }
 }

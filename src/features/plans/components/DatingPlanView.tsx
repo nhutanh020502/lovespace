@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { DatingPlan, PlanStatus } from '../../../types/plan.types';
+import { generateUUID } from '../../../utils/uuidUtils';
 import { PlanDetailView } from './PlanDetailView';
 import { PlanModal } from './PlanModal';
 import { Button } from '../../../components/ui/Button';
@@ -58,7 +60,7 @@ export const DatingPlanView: React.FC<DatingPlanViewProps> = ({
     const today = new Date().toISOString().split('T')[0];
     const clonedPlan: DatingPlan = {
       ...sourcePlan,
-      id: `plan_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      id: generateUUID(),
       title: `${sourcePlan.title} (Bản Sao)`,
       startDate: today,
       endDate: sourcePlan.totalDays > 1 ? today : undefined,
@@ -68,12 +70,12 @@ export const DatingPlanView: React.FC<DatingPlanViewProps> = ({
       createdBy: currentUserId,
       items: sourcePlan.items.map((it) => ({
         ...it,
-        id: `item_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        id: generateUUID(),
         isCompleted: false,
       })),
       packingList: sourcePlan.packingList?.map((pk) => ({
         ...pk,
-        id: `pack_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        id: generateUUID(),
         isPacked: false,
       })),
     };
@@ -85,7 +87,7 @@ export const DatingPlanView: React.FC<DatingPlanViewProps> = ({
   // Tạo kế hoạch mới
   const handleCreatePlan = (planData: Partial<DatingPlan>) => {
     const newPlan: DatingPlan = {
-      id: `plan_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      id: generateUUID(),
       title: planData.title || 'Kế hoạch hẹn hò 💕',
       startDate: planData.startDate || new Date().toISOString().split('T')[0],
       endDate: planData.endDate,
@@ -98,9 +100,9 @@ export const DatingPlanView: React.FC<DatingPlanViewProps> = ({
       status: 'upcoming',
       items: [],
       packingList: [
-        { id: `pk_${Date.now()}_1`, name: 'Áo khoác đôi', assignedTo: 'both', isPacked: false },
-        { id: `pk_${Date.now()}_2`, name: 'Sạc dự phòng', assignedTo: 'husband', isPacked: false },
-        { id: `pk_${Date.now()}_3`, name: 'Son môi & Gương', assignedTo: 'wife', isPacked: false },
+        { id: generateUUID(), name: 'Áo khoác đôi', assignedTo: 'both', isPacked: false },
+        { id: generateUUID(), name: 'Sạc dự phòng', assignedTo: 'husband', isPacked: false },
+        { id: generateUUID(), name: 'Son môi & Gương', assignedTo: 'wife', isPacked: false },
       ],
       createdBy: currentUserId,
       createdAt: new Date().toISOString(),
@@ -132,7 +134,7 @@ export const DatingPlanView: React.FC<DatingPlanViewProps> = ({
   const completedCount = plans.filter((p) => p.status === 'completed').length;
 
   return (
-    <div className="space-y-4 pb-20 animate-fade-in">
+    <div className="space-y-4 animate-fade-in">
       {/* 1. Header & Nút Tạo Kế Hoạch */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-3xl bg-white/80 backdrop-blur-md border border-rose-200/60 shadow-sm">
         <div className="flex items-center gap-2.5">
@@ -185,17 +187,24 @@ export const DatingPlanView: React.FC<DatingPlanViewProps> = ({
           )}
         </div>
 
-        {/* 3 Tabs Phân Loại */}
-        <div className="flex items-center gap-1.5 p-1 bg-white/60 backdrop-blur-md rounded-2xl border border-rose-100/80 shadow-xs">
+        {/* 3 Tabs Phân Loại (M1 - Shared layoutId) */}
+        <div className="flex items-center gap-1.5 p-1 bg-white/60 backdrop-blur-md rounded-2xl border border-rose-100/80 shadow-xs relative">
           <button
             type="button"
             onClick={() => setActiveStatusTab('upcoming')}
-            className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+            className={`relative flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 z-10 ${
               activeStatusTab === 'upcoming'
-                ? 'bg-rose-500 text-white shadow-sm'
+                ? 'text-white'
                 : 'text-slate-600 hover:text-rose-600'
             }`}
           >
+            {activeStatusTab === 'upcoming' && (
+              <motion.div
+                layoutId="planStatusTab"
+                className="absolute inset-0 bg-rose-500 rounded-xl shadow-sm -z-10"
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              />
+            )}
             <Compass className="w-3.5 h-3.5" />
             <span>Sắp Diễn Ra</span>
             <span className="text-[10px] opacity-80">({upcomingCount})</span>
@@ -204,13 +213,20 @@ export const DatingPlanView: React.FC<DatingPlanViewProps> = ({
           <button
             type="button"
             onClick={() => setActiveStatusTab('ongoing')}
-            className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+            className={`relative flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 z-10 ${
               activeStatusTab === 'ongoing'
-                ? 'bg-rose-500 text-white shadow-sm'
+                ? 'text-white'
                 : 'text-slate-600 hover:text-rose-600'
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+            {activeStatusTab === 'ongoing' && (
+              <motion.div
+                layoutId="planStatusTab"
+                className="absolute inset-0 bg-rose-500 rounded-xl shadow-sm -z-10"
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              />
+            )}
+            <Sparkles className="w-3.5 h-3.5" />
             <span>Đang Diễn Ra</span>
             <span className="text-[10px] opacity-80">({ongoingCount})</span>
           </button>
@@ -218,12 +234,19 @@ export const DatingPlanView: React.FC<DatingPlanViewProps> = ({
           <button
             type="button"
             onClick={() => setActiveStatusTab('completed')}
-            className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+            className={`relative flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 z-10 ${
               activeStatusTab === 'completed'
-                ? 'bg-rose-500 text-white shadow-sm'
+                ? 'text-white'
                 : 'text-slate-600 hover:text-rose-600'
             }`}
           >
+            {activeStatusTab === 'completed' && (
+              <motion.div
+                layoutId="planStatusTab"
+                className="absolute inset-0 bg-rose-500 rounded-xl shadow-sm -z-10"
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              />
+            )}
             <FolderArchive className="w-3.5 h-3.5" />
             <span>Kỷ Niệm Đã Đi</span>
             <span className="text-[10px] opacity-80">({completedCount})</span>

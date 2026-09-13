@@ -21,6 +21,12 @@ export const Avatar: React.FC<AvatarProps> = ({
   className,
   badge
 }) => {
+  const [hasError, setHasError] = React.useState(false);
+
+  React.useEffect(() => {
+    setHasError(false);
+  }, [src]);
+
   const sizeClasses = {
     sm: 'w-8 h-8',
     md: 'w-10 h-10',
@@ -36,11 +42,16 @@ export const Avatar: React.FC<AvatarProps> = ({
     none: '',
   };
 
+  const displaySrc = hasError || !src
+    ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
+    : src;
+
   return (
     <div className={twMerge(clsx('relative inline-block shrink-0', className))}>
       <img
-        src={src}
+        src={displaySrc}
         alt={alt}
+        onError={() => setHasError(true)}
         className={clsx(
           'rounded-full object-cover bg-rose-50',
           sizeClasses[size],
